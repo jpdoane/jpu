@@ -1,0 +1,20 @@
+#!/bin/bash
+
+if [ $# == 0 ]; then
+    echo "usage: jpu_compile source.s"
+fi
+
+basedir=~/dev/jpu
+
+file=$1
+memfile="${file%.s}.mem"
+txthexfile="${file%.s}.txt.mem"
+dathexfile="${file%.s}.dat.mem"
+regfile="${file%.s}.reg"
+bitfile=$basedir/jpu.runs/impl_1/jpu_top.bit
+vivdir=/opt/Xilinx/Vivado/2017.4/bin/
+
+$basedir/util/asm2mem $1
+cp $memfile $basedir/mem/jpu_ram.mem
+
+[ -f $bitfile ] && $vivdir/vivado -mode batch -nojournal -nolog -notrace -source $basedir/mem/mem.tcl

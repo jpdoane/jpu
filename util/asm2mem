@@ -1,0 +1,66 @@
+#!/usr/bin/python
+
+import os, argparse, subprocess, re
+
+# parse arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("fasm", metavar="input.s", help="the MIPS assembly file (ASCII)")
+args = parser.parse_args()
+
+fasm = args.fasm
+ftext = os.path.splitext(args.fasm)[0] + ".txt"
+fdata = os.path.splitext(args.fasm)[0] + ".dat"
+ftxthex = os.path.splitext(args.fasm)[0] + ".txt.mem"
+fdathex = os.path.splitext(args.fasm)[0] + ".dat.mem"
+fmem = os.path.splitext(args.fasm)[0] + ".mem"
+
+# run SPIM (the actual MIPS assembler)
+# SPIM = "/afs/ece/class/ece447/bin/spim447"
+SPIM = "/usr/bin/spim"
+cmd = [SPIM, "-notrap", "-asm", "-dump", "-quiet", "-f", fasm]
+# cmd = [SPIM, "-notrap", "-asm", "-quiet", "-f", fasm]
+subprocess.call(cmd)
+
+# SPIM outputs many files; but we are interested in only one
+#cmd = ["mv", fhex + ".text.dat", fhex]
+cmd = ["mv", "text.asm", ftext]
+subprocess.call(cmd)
+cmd = ["mv", "data.asm", fdata]
+subprocess.call(cmd)
+
+#
+regex_hex = r"(?:0x|0X)?([a-fA-F0-9]+)"
+regex_textline = r"^\[" + regex_hex + r"\]\s+" + regex_hex + "\s+.*$"
+regex_dataline = r"^\[" + regex_hex + r"\]\s+(?:" + regex_hex + "\s+)+$"
+
+mem = ''
+txthex = ''
+dathex = ''
+# remove unnecessary two lines from the txt file
+lines = open(ftext).readlines()
+#lines = map(lambda x: x.lstrip(), lines)
+for line in lines:
+    textline = re.match(regex_textline, line, flags=0)
+    if(textline):
+            mem = mem + '@' + textline.group(1) + ' ' + textline.group(2) + '\r\n'
+            txthex = txthex + textline.group(2) + '\r\n'
+
+lines = open(fdata).readlines()
+#lines = map(lambda x: x.lstrip(), lines)
+for line in lines:
+    if(re.match(regex_dataline, line, flags=0)):
+        #dataline regex doesnt return all matched groups, so perform regex to match all hex
+        hexvals = re.findall(regex_hex, line, flags=0)
+        mem = mem + '@' + str.join(' ', hexvals) + '\r\n'
+        dathex = dathex + str.join('\r\n', hexvals[1:]) + '\r\n'
+
+open(fmem, 'w').write(mem)
+open(ftxthex, 'w').write(txthex)
+open(fdathex, 'w').write(dathex)
+
+# remove all other files
+#cmd = ["rm", fhex + ".*.dat"]
+#cmd = ["rm", "*.asm"]
+#cmd = str.join(' ', cmd)
+#subprocess.call(cmd, shell=True)  # we need a shell to expand the wildcard
+

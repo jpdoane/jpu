@@ -1,0 +1,5 @@
+#!/bin/bash
+
+basedir=~/dev/jpu
+
+$basedir/util/tester.pl $basedir/mem/ref.reg $basedir/jpu.sim/sim_1/behav/xsim/regdump.txt 
