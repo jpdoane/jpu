@@ -1,0 +1,10 @@
+mips_src/447/
+jpu.*/
+*.mem
+*~
+*.jou
+*.log
+*\#
+*.bit
+*.dat
+*.txt
