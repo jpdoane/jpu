@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MemInfo Version="1" Minor="0">
+  <Processor Endianness="Little" InstPath="jpu">
+    <AddressSpace Name="text" Begin="4194304" End="4198399">
+      <BusBlock>
+	<BitLane MemType="RAMB32" Placement="X2Y5">
+          <DataWidth MSB="31" LSB="24"/>
+          <AddressRange Begin="4194304" End="4198399"/>
+          <Parity ON="false" NumBits="0"/>
+        </BitLane>
+	<BitLane MemType="RAMB32" Placement="X2Y6">
+          <DataWidth MSB="23" LSB="16"/>
+          <AddressRange Begin="4194304" End="4198399"/>
+          <Parity ON="false" NumBits="0"/>
+        </BitLane>
+	<BitLane MemType="RAMB32" Placement="X1Y6">
+          <DataWidth MSB="15" LSB="8"/>
+          <AddressRange Begin="4194304" End="4198399"/>
+          <Parity ON="false" NumBits="0"/>
+        </BitLane>
+	<BitLane MemType="RAMB32" Placement="X1Y5">
+          <DataWidth MSB="7" LSB="0"/>
+          <AddressRange Begin="4194304" End="4198399"/>
+          <Parity ON="false" NumBits="0"/>
+        </BitLane>
+      </BusBlock>
+    </AddressSpace>
+    <AddressSpace Name="data" Begin="268435456" End="268439551">
+      <BusBlock>
+	<BitLane MemType="RAMB32" Placement="X2Y4">
+          <DataWidth MSB="31" LSB="24"/>
+          <AddressRange Begin="268435456" End="268439551"/>
+          <Parity ON="false" NumBits="0"/>
+        </BitLane>
+	<BitLane MemType="RAMB32" Placement="X1Y3">
+          <DataWidth MSB="23" LSB="16"/>
+          <AddressRange Begin="268435456" End="268439551"/>
+          <Parity ON="false" NumBits="0"/>
+        </BitLane>
+	<BitLane MemType="RAMB32" Placement="X1Y4">
+          <DataWidth MSB="15" LSB="8"/>
+          <AddressRange Begin="268435456" End="268439551"/>
+          <Parity ON="false" NumBits="0"/>
+        </BitLane>
+	<BitLane MemType="RAMB32" Placement="X2Y3">
+          <DataWidth MSB="7" LSB="0"/>
+          <AddressRange Begin="268435456" End="268439551"/>
+          <Parity ON="false" NumBits="0"/>
+        </BitLane>
+      </BusBlock>
+    </AddressSpace>
+  </Processor>
+  <Config>
+    <Option Name="Part" Val="xc7a35ticsg324-1L"/>
+  </Config>
+</MemInfo>
