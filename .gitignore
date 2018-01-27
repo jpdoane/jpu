@@ -1,9 +1,7 @@
-src/447/
-src/asm/
-crosstool/
 jpu.*/
 *.mem
 *.elf
+*.o
 *~
 *.jou
 *.log
