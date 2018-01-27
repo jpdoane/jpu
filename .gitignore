@@ -1,6 +1,9 @@
-mips_src/447/
+src/447/
+src/asm/
+crosstool/
 jpu.*/
 *.mem
+*.elf
 *~
 *.jou
 *.log

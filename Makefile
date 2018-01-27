@@ -3,59 +3,50 @@
 ### Setup
 ###################################################################
 
+SRCDIR = src/
+
 UTILDIR = util/
 MEMDIR = mem/
-MIPSDIR = mips_src/
-MIPSSRC = $(shell find $(MIPSDIR) -name '*.s')
+OBJDIR = obj/
 
-INPUT ?= mips_src/uart_HelloWorld.s
+INPUT ?= src/echo.c
+
+LNSCRIPT=$(UTILDIR)jpu_linker.lds
+GCC=mipsel-unknown-elf-gcc
+OBJDUMP=mipsel-unknown-elf-objdump
+GCCFLAGS=-G0 -Os -membedded-data -nostdlib -T $(LNSCRIPT)
 
 VIVDIR = /opt/Xilinx/Vivado/2017.4/bin/
 VIVFLAGS = -mode batch -nojournal -nolog -notrace
 RAWBITFILE = jpu.runs/impl_1/jpu_top.bit
-UPDATEMEMFLAGS = "-debug -force"
+LOADEDBITFILE = jpu_load.bit
+UPDATEMEMFLAGS = "-force"
 
-INPUTFILE=$(notdir $INPUT)
-HEXFILES=$(INPUT:.s=.txt) $(INPUT:.s=.dat)
-MEMFILES=$(INPUT:.s=.txt.mem) $(INPUT:.s=.dat.mem)
-MEMFILE=$(INPUT:.s=.mem)
+ELFFILE=$(MEMDIR)prog.elf
+TEXTMEMFILE=$(MEMDIR)text.mem
+DATAMEMFILE=$(MEMDIR)data.mem
 
 
-###################################################################
-### Assembly Input
-###################################################################
+#######
+##
 
-%.txt %.dat %.dat.mem %.txt.mem %.mem: %.s
-	@echo "Assembling $<"
-	$(UTILDIR)asm2mem $<
-#	@echo "Copying mem files to $(MEMDIR)"
-#	cp $(<:.s=.txt.mem) $(MEMDIR)text.mem
-#	cp $(<:.s=.dat.mem) $(MEMDIR)data.mem
-#	cp $(<:.s=.mem) $(MEMDIR)ram.mem
+$(OBJDIR)echo.o: $(MIPSDIR)echo.c $(MIPSDIR)uart.c
+	$(GCC) $(GCCFLAGS) $^ -o $@
+	cp $@ $(ELFFILE)
 
-assemble: $(HEXFILES)
+####
 
-$(MEMDIR)ram.mem: $(INPUT:.s=.mem)
-	cp $< $@
+$(ELFFILE): $(OBJDIR)echo.o
 
-$(MEMDIR)text.mem: $(INPUT:.s=.txt.mem)
-	cp $< $@
+loadsim:
+	$(OBJDUMP) -sj .data $(ELFFILE) | $(UTILDIR)/elf2mem > $(DATAMEMFILE)
+	$(OBJDUMP) -sj .text $(ELFFILE) | $(UTILDIR)/elf2mem > $(TEXTMEMFILE)
 
-$(MEMDIR)data.mem: $(INPUT:.s=.dat.mem)
-	cp $< $@
-
-loadsim: $(MEMDIR)text.mem $(MEMDIR)data.mem
-
-########
-## Load Bitfile
-
-jpu_load.bit: $(MEMDIR)ram.mem
-	@echo "exec updatemem $(UPDATEMEMFLAGS) --meminfo $(MEMDIR)/jpu.mmi \
-	--data $< --bit $(RAWBITFILE)  --proc jpu --out $@" > $(MEMDIR)mem.tcl
-	$(VIVDIR)vivado $(VIVFLAGS) -source $(MEMDIR)mem.tcl
+loadbf:
+	@echo "exec updatemem $(UPDATEMEMFLAGS) --meminfo $(MEMDIR)jpu_elf.mmi \
+	--data $(ELFFILE) --bit $(RAWBITFILE)  --proc jpu --out $(LOADEDBITFILE)" > $(MEMDIR)mem_elf.tcl
+	$(VIVDIR)vivado $(VIVFLAGS) -source $(MEMDIR)mem_elf.tcl
 	cat updatemem.log
-
-loadbf: jpu_load.bit
 
 program: 
 	$(VIVDIR)vivado $(VIVFLAGS) -source $(UTILDIR)program_bf.tcl
@@ -63,13 +54,9 @@ program:
 #######
 
 clean:
-	rm -f $(MIPSSRC:.s=.dat)
-	rm -f $(MIPSSRC:.s=.dat.mem)
-	rm -f $(MIPSSRC:.s=.txt)
-	rm -f $(MIPSSRC:.s=.txt.mem)
-	rm -f $(MIPSSRC:.s=.mem)
+	rm -f $(LOADEDBITFILE)
+	rm -rf $(OBJDIR)
+	rm -f $(MEMDIR)*.elf
 	rm -f $(MEMDIR)*.mem
-	rm -f $(MEMDIR)*.reg
-	rm -f jpu_load.bit
-	rm -f updatemem*.jou
-	rm -f updatemem*.log
+	rm -f *.jou
+	rm -f *.log

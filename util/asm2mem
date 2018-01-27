@@ -17,7 +17,9 @@ fmem = os.path.splitext(args.fasm)[0] + ".mem"
 # run SPIM (the actual MIPS assembler)
 # SPIM = "/afs/ece/class/ece447/bin/spim447"
 SPIM = "/usr/bin/spim"
-cmd = [SPIM, "-notrap", "-asm", "-dump", "-quiet", "-f", fasm]
+textsize = 0x4000
+datasize = 0x4000
+cmd = [SPIM, "-notrap", "-asm", "-dump", "-quiet","-st",str(textsize),"-sd",str(datasize), "-f", fasm]
 # cmd = [SPIM, "-notrap", "-asm", "-quiet", "-f", fasm]
 subprocess.call(cmd)
 
