@@ -10,12 +10,13 @@ module jpu_core(/*AUTOARG*/
    // Outputs
    halted, bus_master_inst_out, bus_master_data_out, ila_probe,
    // Inputs
-   clk, rst_b, bus_master_inst_in, bus_master_data_in
+   clk, rst_b, interrupts, bus_master_inst_in, bus_master_data_in
    );
    
    // Core Interface
    input         clk, rst_b;
    output        halted;
+   input 	 [7:0] interrupts;
    input 	 bus::s2m_s bus_master_inst_in, bus_master_data_in;
    output 	 bus::m2s_s bus_master_inst_out, bus_master_data_out;
    output [31:0] ila_probe[5:0];
@@ -26,23 +27,22 @@ module jpu_core(/*AUTOARG*/
    
    // pc and flow signals
    logic 	 rst, en0, en;
-   logic 	 bus_inst_valid, bus_inst_stall, inst_excpt;
+   logic 	 bus_inst_valid, bus_inst_stall;
    logic [31:0]  inst;
-   logic [31:0]  pc, nextpc, nextpcplus4;
+   logic [31:0]  pc, pc_r1, nextpc, nextpcplus4;
    logic [29:0]  addr_fetch;
    logic [31:0]  addr_jump, addr_branch, addr_link;
    logic 	 branch_en;
-   logic 	 pipeline_stall; 	 
-   logic 	 internal_halt, halted;
+   logic 	 stall, stalled; 	 
 
    // register data
    logic [31:0]  rt_data, rs_data;
+   logic [4:0]  rd_num;
    logic [31:0]  reg_write_data;  
 
    // memory signals
-   logic 	 mem_read_valid, mem_excpt, bus_data_stall, mem_req;
+   logic 	 mem_read_valid, bus_data_stall, mem_req;
    logic [29:0]  mem_addr;
-   logic 	 write_align_except, read_align_except;
    logic [31:0]  mem_read_word, mem_write_word;
    logic [3:0] 	 mem_mask;
    logic [31:0]  mem_read_data;
@@ -52,7 +52,15 @@ module jpu_core(/*AUTOARG*/
    logic [31:0]  alu_out, alu_out_r1;
    logic [31:0]  alu_in1, alu_in2;
    logic [2:0] 	 alu_cmp;		// From ALU of mips_alu.v
-   logic [3:0] 	 alu_op;			// From Decoder of mips_decode.v
+   aluop_s 	 alu_op;			// From Decoder of mips_decode.v
+
+   //cp0 
+   exceptions_s excepts;
+   logic 	 mem_except, inst_except;
+   logic 	 write_align_except, read_align_except;
+   logic 	 raise_exception, eret;
+   logic [31:0]  cp0_data_out, cp0_data_r1;   
+   logic [31:0]  epc, vaddr;   
    
    //reset and enables...
    always @(posedge clk) begin
@@ -90,30 +98,38 @@ module jpu_core(/*AUTOARG*/
    //    we have jumped and are now executing target code, with properly linked return address
    //  
 
-   assign pipeline_stall = bus_inst_stall | bus_data_stall;  //temporary stall due to bus latency
-   assign internal_halt = ctrl.sys_except | ctrl.inst_except; //interrupt or exception
+   assign stall = bus_inst_stall | bus_data_stall | raise_exception | eret;  //temporary stall due to bus latency
 
    always @(posedge clk) begin
       if (rst) begin
 	 pc <= '0;
-	 nextpc <= `TEXT_SEG_BASE;
+	 nextpc <= `BOOTSTRAP_START;
 	 addr_link <= '0;
-	 halted <= 1'b0;
+	 stalled <= 1'b0;
       end
       else begin
-	 if (en & ~internal_halt & ~pipeline_stall) begin
+	 if( en0 & ~en) begin
+	    //about to go live...
+	    pc <= nextpc;
+	    nextpc <= nextpcplus4;
+	    addr_link <= nextpcplus4;
+	    stalled <= 1'b0;
+	 end
+	 else if (stall | ~en) begin
+	    pc <= pc;
+	    nextpc <= (eret) ? cp0_data_out :
+		      (raise_exception) ? `EXCEPT_HANDLER :
+		       nextpc;
+	    addr_link <= addr_link;
+	    stalled <= 1'b1;
+	 end
+	 else begin
 	    pc <= nextpc;
 	    nextpc <= (ctrl.j == 1'b1) ? addr_jump :
 		      (branch_en == 1'b1) ? addr_branch :
 		      nextpcplus4;
 	    addr_link <= nextpcplus4;
-	    halted <= 1'b0;
-	 end
-	 else begin
-	    pc <= pc;
-	    nextpc <= nextpc;
-	    addr_link <= addr_link;
-	    halted <= internal_halt;
+	    stalled <= 1'b0;
 	 end
       end // else: !if(rst)
    end // always @ (posedge clk)
@@ -123,20 +139,27 @@ module jpu_core(/*AUTOARG*/
    assign addr_jump = (dcd.op == 6'h0) ? rs_data : {pc[31:28], dcd.target, 2'b0};
    assign addr_branch = nextpc + dcd.br_offset; //branch offset is relative to branch delay slot
    assign branch_en = ctrl.br && ( | (ctrl.br_cond & alu_cmp) );
+   assign epc = (ctrl_r1.j | ctrl_r1.br) ? pc_r1 : pc;
    
    decode Decoder(/*AUTOINST*/
 		  // Outputs
 		  .ctrl			(ctrl),
 		  .dcd			(dcd),
 		  // Inputs
-		  .inst			(inst[31:0]));
+		  .inst			(inst[31:0]),
+		  .en			(en & ~stalled));
    
    // data to write to register
    // piplelined to accomodate mem read delay
-   assign reg_write_data = (ctrl_r1.link == 1'b1) ? addr_link :
-			   ~ctrl_r1.mem_read ? alu_out_r1 :
-			   ctrl_r1.mem_se ? mem_read_data_se :
-			   mem_read_data;
+   assign reg_write_data = (ctrl_r1.reg_src == LINK) ? addr_link :
+			   (ctrl_r1.reg_src == ALU) ? alu_out_r1 :
+			   (ctrl_r1.reg_src == CP0) ? cp0_data_r1 :
+			   (ctrl_r1.reg_src == MEM) ? mem_read_data :
+			   (ctrl_r1.reg_src == MEM_SE) ? mem_read_data_se : '0;
+
+   assign rd_num = (ctrl_r1.reg_dst==RD) ? dcd_r1.rd :
+		   (ctrl_r1.reg_dst==RT) ? dcd_r1.rt :
+		   (ctrl_r1.reg_dst==RA) ? `R_RA : '0;
 
    regfile Registers(//Outputs
 		     .rs_data(rs_data),
@@ -144,36 +167,40 @@ module jpu_core(/*AUTOARG*/
 		     //Inputs
 		     .rs_num(dcd.rs),
 		     .rt_num(dcd.rt),
-		     .rd_num(ctrl_r1.reg_dst),
+		     .rd_num(rd_num),
 		     .rd_data(reg_write_data),
-		     .rd_we(ctrl_r1.reg_write),
+		     .rd_we(en & ctrl_r1.reg_write),
+//		     .rd_we(en & ctrl_r1.reg_write & ~stall),
 		     .clk(clk),
 		     .rst_b(rst_b),
-		     .halted(halted));
-
+		     .halted());
 
    // register decode and control signals for pipelined ops
    always @(posedge clk) begin
       if (rst) begin
-	 dcd_r1 <= '0;
+	 cp0_data_r1 <= '0;
 	 ctrl_r1 <= '0;
+	 dcd_r1 <= '0;
 	 alu_out_r1 <= '0;
+	 pc_r1 <= '0;
       end
       else begin
-	 if (internal_halt) begin
-	    dcd_r1 <= dcd_r1;
+	 if (stall) begin
+	    cp0_data_r1 <= cp0_data_r1;
 	    ctrl_r1 <= ctrl_r1;
+	    dcd_r1 <= dcd_r1;
 	    alu_out_r1 <= alu_out_r1;
+	    pc_r1 <= pc_r1;
 	 end	 
 	 else begin
-	    dcd_r1 <= dcd;
+	    cp0_data_r1 <= cp0_data_out;
 	    ctrl_r1 <= ctrl;
+	    dcd_r1 <= dcd;
 	    alu_out_r1 <= alu_out;
+	    pc_r1 <= pc;
 	 end // else: !ifinternal_halt
       end // else: !if(rst)
    end // always @ (posedge clk)
-
-
 
    // ****************************
    // ALU
@@ -183,8 +210,7 @@ module jpu_core(/*AUTOARG*/
 		    (ctrl.alu_src2 == IMM) ? dcd.imm_ze :
 		    dcd.imm_se;   		    
    // Execute
-   mips_alu ALU(/*AUTOINST*/
-		// Outputs
+   mips_alu ALU(// Outputs
 		.alu_out		(alu_out[31:0]),
 		.alu_cmp		(alu_cmp[2:0]),
 		// Inputs
@@ -203,7 +229,7 @@ module jpu_core(/*AUTOARG*/
 			      .data_o		(inst),
 			      .valid_o		(bus_inst_valid),
 			      .stall_o		(bus_inst_stall),
-			      .err_o		(inst_excpt),
+			      .err_o		(inst_except),
 			      .bus_o		(bus_master_inst_out),
 			      // Inputs
 			      .clk		(clk),
@@ -231,12 +257,12 @@ module jpu_core(/*AUTOARG*/
 			       .data_o		(mem_read_word),
 			       .valid_o		(mem_read_valid),
 			       .stall_o		(bus_data_stall),
-			       .err_o		(mem_excpt),
+			       .err_o		(mem_except),
 			       .bus_o		(bus_master_data_out),
 			       // Inputs
 			       .clk		(clk),
 			       .rst		(rst),
-			       .en_i		(mem_req),
+			       .en_i		(en & mem_req),
 			       .we_i		(ctrl.mem_write),
 			       .data_i		(mem_write_word),
 			       .addr_i		(mem_addr),
@@ -254,38 +280,57 @@ module jpu_core(/*AUTOARG*/
 				 .data_se(mem_read_data_se), //data shifted to lsb, sign extened
 				 .align_except(read_align_except));
 
-     
+   //coproc 0 interrupts and exceptions
+   always @(*) begin
+      excepts = '0; // set unimplemented excepts to zero
+      excepts.RI = ctrl.inst_except;
+      excepts.Sys = ctrl.sys_except;
+      excepts.IBE = inst_except;
+      excepts.DBE = mem_except;
+      excepts.AdEL = inst_except | (mem_except & ctrl_r1.mem_read) | read_align_except;
+      excepts.AdES = mem_except & ctrl_r1.mem_write | write_align_except;   
+      vaddr = inst_except ? pc :
+	      write_align_except ? alu_out :
+	      read_align_except | mem_except ? alu_out_r1 :
+	      '0;
+   end // always @ (*)
+   
+   cp0 CP0(// Outputs
+	   .cp0_data_out		(cp0_data_out),
+	   .raise_exception		(raise_exception),
+	   .eret                        (eret),
+	   // Inputs
+	   .clk				(clk),
+	   .rst				(rst),
+	   .en                          (en),
+	   .stalled                     (stalled),
+	   .epc				(epc[31:0]),
+	   .vaddr			(vaddr[31:0]),
+	   .ints_in			(interrupts[7:0]),
+	   .excepts			(excepts),
+	   .cp0_op			(ctrl.cp0_op),
+	   .cp0_data_in			(rt_data),
+	   .cp0_reg			(dcd.rd));
 
    //ila probes
    assign  ila_probe[0] = pc;
-   assign  ila_probe[1] = inst;
-   assign  ila_probe[2] = mem_read_word;
-   assign  ila_probe[3] = mem_write_word;
-   assign  ila_probe[4] = mem_addr;
-   // assign  ila_probe[5][0] = alu_alt;        // From Decoder of mips_decode.v
-   // assign  ila_probe[5][4:1] = alu_op;            // From Decoder of mips_decode.v
-   // assign  ila_probe[5][5] = ctrl_ALUSrc1;        // From Decoder of mips_decode.v
-   // assign  ila_probe[5][7:6] = ctrl_ALUSrc2;        // From Decoder of mips_decode.v
-   // assign  ila_probe[5][8] = ctrl_Branch;        // From Decoder of mips_decode.v
-   // assign  ila_probe[5][11:9] = ctrl_BranchCond;    // From Decoder of mips_decode.v
-   // assign  ila_probe[5][12] = ctrl_InstException;    // From Decoder of mips_decode.v
-   // assign  ila_probe[5][13] = ctrl_Jump;        // From Decoder of mips_decode.v
-   // assign  ila_probe[5][14] = ctrl_Link;        // From Decoder of mips_decode.v
-   // assign  ila_probe[5][15] = ctrl_MemRead;        // From Decoder of mips_decode.v
-   // assign  ila_probe[5][16] = ctrl_MemSE;        // From Decoder of mips_decode.v
-   // assign  ila_probe[5][18:17] = ctrl_MemSize;        // From Decoder of mips_decode.v
-   // assign  ila_probe[5][19] = ctrl_MemWrite;        // From Decoder of mips_decode.v
-   // assign  ila_probe[5][21:20] = ctrl_RegDst;        // From Decoder of mips_decode.v
-   // assign  ila_probe[5][22] = ctrl_RegSrc;        // From Decoder of mips_decode.v
-   // assign  ila_probe[5][23] = ctrl_RegWrite;        // From Decoder of mips_decode.v
-   // assign  ila_probe[5][24] = ctrl_SysException;    // From Decoder of mips_decode.v
-   // assign  ila_probe[5][25] = branch_en;
-   // assign  ila_probe[5][26] = exception_halt;
-   // assign  ila_probe[5][27] = syscall_halt;
-   // assign  ila_probe[5][28] = syscall_halt;
-   // assign  ila_probe[5][30:29] = 2'b0;
-   // assign  ila_probe[5][31] = rst_b;
-
+   assign  ila_probe[1] = nextpc;
+   assign  ila_probe[2] = cp0_data_out;   
+   assign  ila_probe[3][0] = ctrl.j;   
+   assign  ila_probe[3][1] = ctrl.br;   
+   assign  ila_probe[3][2] = branch_en;   
+   assign  ila_probe[3][3] = stall;
+   assign  ila_probe[3][31:4] = '0;   
+   assign  ila_probe[4][10:0] = excepts;
+   assign  ila_probe[4][18:11] = interrupts;
+   assign  ila_probe[5][25:0] = ctrl;   
+   assign  ila_probe[5][26] = stall;
+   assign  ila_probe[5][27] = branch_en;
+   assign  ila_probe[5][28] = eret;
+   assign  ila_probe[5][29] = raise_exception;
+   assign  ila_probe[5][30] = en;
+   assign  ila_probe[5][31] = rst;
+   
 endmodule // mips_core
 
 

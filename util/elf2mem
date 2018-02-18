@@ -1,17 +1,21 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 
 import sys, re
 
+regex_memline = r"^\s*([0-9a-fA-F]+)\s+(([0-9a-fA-F]{8}\s+)+)"
 
-regex_hexwordbytes = r"([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})"
-regex_hexword = r"([0-9a-fA-F]+)"
-regex_memline = r"^\s*([0-9a-fA-F]+)\s+([0-9a-fA-F]+\w)+"
-regex_memline = r"^\s*([0-9a-fA-F]+)\s+(([0-9a-fA-F]+\s+)+)"
+nextaddr = -1
 
 for line in sys.stdin:
     memline = re.match(regex_memline, line, flags=0)
     if(memline):
         #memline_LE = "@" + memline.group(1)
+        addr = int(memline.group(1),16)
+        if nextaddr<0:
+            nextaddr=addr;
+        while addr>nextaddr: #check for unitialized addresses
+            print "00000000" #insert zero word as placeholder
+            nextaddr += 4            
         words = memline.group(2).split()
         for word in words:
             word_BE = "00000000" + word
@@ -20,5 +24,7 @@ for line in sys.stdin:
             byte1 = word[-6:-4]
             byte0 = word[-8:-6]
             memline_LE = byte3 + byte2 + byte1 + byte0
+            nextaddr += 4
             print memline_LE
+#            print hex(nextaddr) + memline_LE
         

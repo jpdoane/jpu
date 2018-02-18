@@ -1,5 +1,5 @@
+#define UART_BASE 0xffff0000
 
-#define UART_ADDR 0x1000
 #define UART_DIV 0x411
 #define TX_STATUS_MASK 0x100000	
 

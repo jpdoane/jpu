@@ -2,11 +2,6 @@
 
 This is a 32 bit mips ISA CPU. Some of the code is borrowed from the CMU ece447 labs found here: http://www.ece.cmu.edu/~ece447/s15/doku.php, although I plan to eventually replace all borrowed code with my own.  The CMU ece447 course lectures and lab files are all online and are a really great resource for learning about computer architecture.
 
-The CPU is written in Verilog and runs on an Xilinx Artix 7 (I'm using the Digilent Arty 7 board).
-But it should be straightforward to get it to run on any small FPGA.  The Xilinx Vivado project is included, and runs on the (free) Xilinx web-pack license.
+The CPU is written in Verilog and runs on an Xilinx Artix 7 (I'm using the Digilent Arty 7 board). But it should be straightforward to get it to run on any small FPGA.  The Xilinx Vivado project is included, and runs on the (free) Xilinx web-pack license.
 
-I am using a mips cross-toolchain with gcc, which allows compiling c code to mips object files.
-This is relatively easy to set up with crosstool-ng: http://crosstool-ng.github.io/
-A build.log file is included which can be used to automatically configure the toolchain for the JPU: http://crosstool-ng.github.io/docs/configuration/
-
-Alternately, mips assy files can be assembled with spim, which can be optained here: http://spimsimulator.sourceforge.net/
+Compiling for the JPU requires a cross-toolchain to generate mips machine code. This can be set up rather painlessly using crosstool-ng (http://crosstool-ng.github.io/). Once you have installed crosstool-ng on your system, 'make crosstool' will make and install a mips toolchain, which can be invoked e.g. as 'mips-gcc'. The default toolchain install location is $HOME/x-tools/, but this along with a number of other options can be configured by running 'ct-ng menuconfig' in the crosstool/ directory.  See http://crosstool-ng.github.io/docs/configuration/ for more details.

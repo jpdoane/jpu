@@ -19,5 +19,27 @@ SECTIONS
   . = 0x10000000;
   .data : { *(.sdata* .rodata* .data* .bss) }  
   .MIPS.abiflags : { *(.MIPS.abiflags) }
+  . = 0x80000000;
+  .boot :
+  {
+	*(bootstrap)
+	*(.boot*)
+  }
+  . = 0x80000180;
+  .except :
+  {
+	*(except_hdl)
+	*(.except*)
+  }
+  .ktext :
+  {
+	*(.ktext*)
+  }
+  . = 0x90000000;
+  .kdata :
+  {
+	*(.kdata*)
+  }
+
 /*  .other : { *(.MIPS.abiflags) }*/
 }

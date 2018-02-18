@@ -12,10 +12,10 @@ set_property -dict {PACKAGE_PIN E3 IOSTANDARD LVCMOS33} [get_ports clk100MHz]
 
 ##Switches
 
-#set_property -dict { PACKAGE_PIN A8    IOSTANDARD LVCMOS33 } [get_ports { sw[0] }]; #IO_L12N_T1_MRCC_16 Sch=sw[0]
-#set_property -dict { PACKAGE_PIN C11   IOSTANDARD LVCMOS33 } [get_ports { sw[1] }]; #IO_L13P_T2_MRCC_16 Sch=sw[1]
-#set_property -dict { PACKAGE_PIN C10   IOSTANDARD LVCMOS33 } [get_ports { sw[2] }]; #IO_L13N_T2_MRCC_16 Sch=sw[2]
-#set_property -dict { PACKAGE_PIN A10   IOSTANDARD LVCMOS33 } [get_ports { sw[3] }]; #IO_L14P_T2_SRCC_16 Sch=sw[3]
+set_property -dict { PACKAGE_PIN A8    IOSTANDARD LVCMOS33 } [get_ports { sw[0] }]; #IO_L12N_T1_MRCC_16 Sch=sw[0]
+set_property -dict { PACKAGE_PIN C11   IOSTANDARD LVCMOS33 } [get_ports { sw[1] }]; #IO_L13P_T2_MRCC_16 Sch=sw[1]
+set_property -dict { PACKAGE_PIN C10   IOSTANDARD LVCMOS33 } [get_ports { sw[2] }]; #IO_L13N_T2_MRCC_16 Sch=sw[2]
+set_property -dict { PACKAGE_PIN A10   IOSTANDARD LVCMOS33 } [get_ports { sw[3] }]; #IO_L14P_T2_SRCC_16 Sch=sw[3]
 
 ##RGB LEDs
 
@@ -234,91 +234,28 @@ set_property CONFIG_VOLTAGE 3.3 [current_design]
 set_property CFGBVS VCCO [current_design]
 
 
-connect_debug_port u_ila_0/clk [get_nets [list clk100MHz_IBUF]]
+#text
+set_property LOC RAMB36_X2Y14 [get_cells {jpu/ram_text/ram_single/byte_write[1].BRAM_reg_0}]
+set_property LOC RAMB36_X1Y16 [get_cells {jpu/ram_text/ram_single/byte_write[1].BRAM_reg_1}]
+set_property LOC RAMB36_X2Y13 [get_cells {jpu/ram_text/ram_single/byte_write[1].BRAM_reg_2}]
+set_property LOC RAMB36_X1Y14 [get_cells {jpu/ram_text/ram_single/byte_write[1].BRAM_reg_3}]
 
-connect_debug_port dbg_hub/clk [get_nets clk100MHz_IBUF]
-
-set_property LOC RAMB36_X2Y4 [get_cells {jpu/ram_data/ram_single/byte_write[1].BRAM_reg_3}]
-set_property LOC RAMB36_X1Y3 [get_cells {jpu/ram_data/ram_single/byte_write[1].BRAM_reg_2}]
-set_property LOC RAMB36_X1Y4 [get_cells {jpu/ram_data/ram_single/byte_write[1].BRAM_reg_1}]
+#data
 set_property LOC RAMB36_X2Y3 [get_cells {jpu/ram_data/ram_single/byte_write[1].BRAM_reg_0}]
+set_property LOC RAMB36_X1Y4 [get_cells {jpu/ram_data/ram_single/byte_write[1].BRAM_reg_1}]
+set_property LOC RAMB36_X1Y3 [get_cells {jpu/ram_data/ram_single/byte_write[1].BRAM_reg_2}]
+set_property LOC RAMB36_X2Y4 [get_cells {jpu/ram_data/ram_single/byte_write[1].BRAM_reg_3}]
 
-set_property LOC RAMB36_X2Y5 [get_cells {jpu/ram_text/ram_dual/byte_write[1].BRAM_reg_3}]
-set_property LOC RAMB36_X2Y6 [get_cells {jpu/ram_text/ram_dual/byte_write[1].BRAM_reg_2}]
-set_property LOC RAMB36_X1Y6 [get_cells {jpu/ram_text/ram_dual/byte_write[1].BRAM_reg_1}]
-set_property LOC RAMB36_X1Y5 [get_cells {jpu/ram_text/ram_dual/byte_write[1].BRAM_reg_0}]
+#ktext
+set_property LOC RAMB36_X1Y13 [get_cells {jpu/ram_ktext/ram_single/byte_write[1].BRAM_reg_0}]
+set_property LOC RAMB36_X1Y17 [get_cells {jpu/ram_ktext/ram_single/byte_write[1].BRAM_reg_1}]
+set_property LOC RAMB36_X1Y12 [get_cells {jpu/ram_ktext/ram_single/byte_write[1].BRAM_reg_2}]
+set_property LOC RAMB36_X1Y15 [get_cells {jpu/ram_ktext/ram_single/byte_write[1].BRAM_reg_3}]
 
-
-create_debug_core u_ila_0 ila
-set_property ALL_PROBE_SAME_MU true [get_debug_cores u_ila_0]
-set_property ALL_PROBE_SAME_MU_CNT 4 [get_debug_cores u_ila_0]
-set_property C_ADV_TRIGGER true [get_debug_cores u_ila_0]
-set_property C_DATA_DEPTH 1024 [get_debug_cores u_ila_0]
-set_property C_EN_STRG_QUAL true [get_debug_cores u_ila_0]
-set_property C_INPUT_PIPE_STAGES 1 [get_debug_cores u_ila_0]
-set_property C_TRIGIN_EN false [get_debug_cores u_ila_0]
-set_property C_TRIGOUT_EN false [get_debug_cores u_ila_0]
-set_property port_width 1 [get_debug_ports u_ila_0/clk]
-connect_debug_port u_ila_0/clk [get_nets [list clk_top/inst/clk100MHz_clk_wiz_0]]
-set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe0]
-set_property port_width 32 [get_debug_ports u_ila_0/probe0]
-connect_debug_port u_ila_0/probe0 [get_nets [list {jpu/ila_probe[0]_44[0]} {jpu/ila_probe[0]_44[1]} {jpu/ila_probe[0]_44[2]} {jpu/ila_probe[0]_44[3]} {jpu/ila_probe[0]_44[4]} {jpu/ila_probe[0]_44[5]} {jpu/ila_probe[0]_44[6]} {jpu/ila_probe[0]_44[7]} {jpu/ila_probe[0]_44[8]} {jpu/ila_probe[0]_44[9]} {jpu/ila_probe[0]_44[10]} {jpu/ila_probe[0]_44[11]} {jpu/ila_probe[0]_44[12]} {jpu/ila_probe[0]_44[13]} {jpu/ila_probe[0]_44[14]} {jpu/ila_probe[0]_44[15]} {jpu/ila_probe[0]_44[16]} {jpu/ila_probe[0]_44[17]} {jpu/ila_probe[0]_44[18]} {jpu/ila_probe[0]_44[19]} {jpu/ila_probe[0]_44[20]} {jpu/ila_probe[0]_44[21]} {jpu/ila_probe[0]_44[22]} {jpu/ila_probe[0]_44[23]} {jpu/ila_probe[0]_44[24]} {jpu/ila_probe[0]_44[25]} {jpu/ila_probe[0]_44[26]} {jpu/ila_probe[0]_44[27]} {jpu/ila_probe[0]_44[28]} {jpu/ila_probe[0]_44[29]} {jpu/ila_probe[0]_44[30]} {jpu/ila_probe[0]_44[31]}]]
-
-connect_debug_port u_ila_0/probe0 [get_nets [list {jpu/ila_probe[0]_43[0]} {jpu/ila_probe[0]_43[1]} {jpu/ila_probe[0]_43[2]} {jpu/ila_probe[0]_43[3]} {jpu/ila_probe[0]_43[4]} {jpu/ila_probe[0]_43[5]} {jpu/ila_probe[0]_43[6]} {jpu/ila_probe[0]_43[7]} {jpu/ila_probe[0]_43[8]} {jpu/ila_probe[0]_43[9]} {jpu/ila_probe[0]_43[10]} {jpu/ila_probe[0]_43[11]} {jpu/ila_probe[0]_43[12]} {jpu/ila_probe[0]_43[13]} {jpu/ila_probe[0]_43[14]} {jpu/ila_probe[0]_43[15]} {jpu/ila_probe[0]_43[16]} {jpu/ila_probe[0]_43[17]} {jpu/ila_probe[0]_43[18]} {jpu/ila_probe[0]_43[19]} {jpu/ila_probe[0]_43[20]} {jpu/ila_probe[0]_43[21]} {jpu/ila_probe[0]_43[22]} {jpu/ila_probe[0]_43[23]} {jpu/ila_probe[0]_43[24]} {jpu/ila_probe[0]_43[25]} {jpu/ila_probe[0]_43[26]} {jpu/ila_probe[0]_43[27]} {jpu/ila_probe[0]_43[28]} {jpu/ila_probe[0]_43[29]} {jpu/ila_probe[0]_43[30]} {jpu/ila_probe[0]_43[31]}]]
-
-connect_debug_port u_ila_0/clk [get_nets [list u_ila_0_clk100MHz_clk_wiz_0]]
-create_debug_port u_ila_0 probe
-set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe1]
-set_property port_width 32 [get_debug_ports u_ila_0/probe1]
-connect_debug_port u_ila_0/probe1 [get_nets [list {jpu/ila_probe[1]_43[0]} {jpu/ila_probe[1]_43[1]} {jpu/ila_probe[1]_43[2]} {jpu/ila_probe[1]_43[3]} {jpu/ila_probe[1]_43[4]} {jpu/ila_probe[1]_43[5]} {jpu/ila_probe[1]_43[6]} {jpu/ila_probe[1]_43[7]} {jpu/ila_probe[1]_43[8]} {jpu/ila_probe[1]_43[9]} {jpu/ila_probe[1]_43[10]} {jpu/ila_probe[1]_43[11]} {jpu/ila_probe[1]_43[12]} {jpu/ila_probe[1]_43[13]} {jpu/ila_probe[1]_43[14]} {jpu/ila_probe[1]_43[15]} {jpu/ila_probe[1]_43[16]} {jpu/ila_probe[1]_43[17]} {jpu/ila_probe[1]_43[18]} {jpu/ila_probe[1]_43[19]} {jpu/ila_probe[1]_43[20]} {jpu/ila_probe[1]_43[21]} {jpu/ila_probe[1]_43[22]} {jpu/ila_probe[1]_43[23]} {jpu/ila_probe[1]_43[24]} {jpu/ila_probe[1]_43[25]} {jpu/ila_probe[1]_43[26]} {jpu/ila_probe[1]_43[27]} {jpu/ila_probe[1]_43[28]} {jpu/ila_probe[1]_43[29]} {jpu/ila_probe[1]_43[30]} {jpu/ila_probe[1]_43[31]}]]
-
-connect_debug_port u_ila_0/probe1 [get_nets [list {jpu/ila_probe[1]_42[0]} {jpu/ila_probe[1]_42[1]} {jpu/ila_probe[1]_42[2]} {jpu/ila_probe[1]_42[3]} {jpu/ila_probe[1]_42[4]} {jpu/ila_probe[1]_42[5]} {jpu/ila_probe[1]_42[6]} {jpu/ila_probe[1]_42[7]} {jpu/ila_probe[1]_42[8]} {jpu/ila_probe[1]_42[9]} {jpu/ila_probe[1]_42[10]} {jpu/ila_probe[1]_42[11]} {jpu/ila_probe[1]_42[12]} {jpu/ila_probe[1]_42[13]} {jpu/ila_probe[1]_42[14]} {jpu/ila_probe[1]_42[15]} {jpu/ila_probe[1]_42[16]} {jpu/ila_probe[1]_42[17]} {jpu/ila_probe[1]_42[18]} {jpu/ila_probe[1]_42[19]} {jpu/ila_probe[1]_42[20]} {jpu/ila_probe[1]_42[21]} {jpu/ila_probe[1]_42[22]} {jpu/ila_probe[1]_42[23]} {jpu/ila_probe[1]_42[24]} {jpu/ila_probe[1]_42[25]} {jpu/ila_probe[1]_42[26]} {jpu/ila_probe[1]_42[27]} {jpu/ila_probe[1]_42[28]} {jpu/ila_probe[1]_42[29]} {jpu/ila_probe[1]_42[30]} {jpu/ila_probe[1]_42[31]}]]
-
-create_debug_port u_ila_0 probe
-set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe2]
-set_property port_width 32 [get_debug_ports u_ila_0/probe2]
-connect_debug_port u_ila_0/probe2 [get_nets [list {jpu/ila_probe[2]_42[0]} {jpu/ila_probe[2]_42[1]} {jpu/ila_probe[2]_42[2]} {jpu/ila_probe[2]_42[3]} {jpu/ila_probe[2]_42[4]} {jpu/ila_probe[2]_42[5]} {jpu/ila_probe[2]_42[6]} {jpu/ila_probe[2]_42[7]} {jpu/ila_probe[2]_42[8]} {jpu/ila_probe[2]_42[9]} {jpu/ila_probe[2]_42[10]} {jpu/ila_probe[2]_42[11]} {jpu/ila_probe[2]_42[12]} {jpu/ila_probe[2]_42[13]} {jpu/ila_probe[2]_42[14]} {jpu/ila_probe[2]_42[15]} {jpu/ila_probe[2]_42[16]} {jpu/ila_probe[2]_42[17]} {jpu/ila_probe[2]_42[18]} {jpu/ila_probe[2]_42[19]} {jpu/ila_probe[2]_42[20]} {jpu/ila_probe[2]_42[21]} {jpu/ila_probe[2]_42[22]} {jpu/ila_probe[2]_42[23]} {jpu/ila_probe[2]_42[24]} {jpu/ila_probe[2]_42[25]} {jpu/ila_probe[2]_42[26]} {jpu/ila_probe[2]_42[27]} {jpu/ila_probe[2]_42[28]} {jpu/ila_probe[2]_42[29]} {jpu/ila_probe[2]_42[30]} {jpu/ila_probe[2]_42[31]}]]
-
-connect_debug_port u_ila_0/probe2 [get_nets [list {jpu/ila_probe[2]_41[0]} {jpu/ila_probe[2]_41[1]} {jpu/ila_probe[2]_41[2]} {jpu/ila_probe[2]_41[3]} {jpu/ila_probe[2]_41[4]} {jpu/ila_probe[2]_41[5]} {jpu/ila_probe[2]_41[6]} {jpu/ila_probe[2]_41[7]} {jpu/ila_probe[2]_41[8]} {jpu/ila_probe[2]_41[9]} {jpu/ila_probe[2]_41[10]} {jpu/ila_probe[2]_41[11]} {jpu/ila_probe[2]_41[12]} {jpu/ila_probe[2]_41[13]} {jpu/ila_probe[2]_41[14]} {jpu/ila_probe[2]_41[15]} {jpu/ila_probe[2]_41[16]} {jpu/ila_probe[2]_41[17]} {jpu/ila_probe[2]_41[18]} {jpu/ila_probe[2]_41[19]} {jpu/ila_probe[2]_41[20]} {jpu/ila_probe[2]_41[21]} {jpu/ila_probe[2]_41[22]} {jpu/ila_probe[2]_41[23]} {jpu/ila_probe[2]_41[24]} {jpu/ila_probe[2]_41[25]} {jpu/ila_probe[2]_41[26]} {jpu/ila_probe[2]_41[27]} {jpu/ila_probe[2]_41[28]} {jpu/ila_probe[2]_41[29]} {jpu/ila_probe[2]_41[30]} {jpu/ila_probe[2]_41[31]}]]
-
-create_debug_port u_ila_0 probe
-set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe3]
-set_property port_width 32 [get_debug_ports u_ila_0/probe3]
-connect_debug_port u_ila_0/probe3 [get_nets [list {jpu/ila_probe[3]_41[0]} {jpu/ila_probe[3]_41[1]} {jpu/ila_probe[3]_41[2]} {jpu/ila_probe[3]_41[3]} {jpu/ila_probe[3]_41[4]} {jpu/ila_probe[3]_41[5]} {jpu/ila_probe[3]_41[6]} {jpu/ila_probe[3]_41[7]} {jpu/ila_probe[3]_41[8]} {jpu/ila_probe[3]_41[9]} {jpu/ila_probe[3]_41[10]} {jpu/ila_probe[3]_41[11]} {jpu/ila_probe[3]_41[12]} {jpu/ila_probe[3]_41[13]} {jpu/ila_probe[3]_41[14]} {jpu/ila_probe[3]_41[15]} {jpu/ila_probe[3]_41[16]} {jpu/ila_probe[3]_41[17]} {jpu/ila_probe[3]_41[18]} {jpu/ila_probe[3]_41[19]} {jpu/ila_probe[3]_41[20]} {jpu/ila_probe[3]_41[21]} {jpu/ila_probe[3]_41[22]} {jpu/ila_probe[3]_41[23]} {jpu/ila_probe[3]_41[24]} {jpu/ila_probe[3]_41[25]} {jpu/ila_probe[3]_41[26]} {jpu/ila_probe[3]_41[27]} {jpu/ila_probe[3]_41[28]} {jpu/ila_probe[3]_41[29]} {jpu/ila_probe[3]_41[30]} {jpu/ila_probe[3]_41[31]}]]
-
-connect_debug_port u_ila_0/probe3 [get_nets [list {jpu/ila_probe[3]_40[0]} {jpu/ila_probe[3]_40[1]} {jpu/ila_probe[3]_40[2]} {jpu/ila_probe[3]_40[3]} {jpu/ila_probe[3]_40[4]} {jpu/ila_probe[3]_40[5]} {jpu/ila_probe[3]_40[6]} {jpu/ila_probe[3]_40[7]} {jpu/ila_probe[3]_40[8]} {jpu/ila_probe[3]_40[9]} {jpu/ila_probe[3]_40[10]} {jpu/ila_probe[3]_40[11]} {jpu/ila_probe[3]_40[12]} {jpu/ila_probe[3]_40[13]} {jpu/ila_probe[3]_40[14]} {jpu/ila_probe[3]_40[15]} {jpu/ila_probe[3]_40[16]} {jpu/ila_probe[3]_40[17]} {jpu/ila_probe[3]_40[18]} {jpu/ila_probe[3]_40[19]} {jpu/ila_probe[3]_40[20]} {jpu/ila_probe[3]_40[21]} {jpu/ila_probe[3]_40[22]} {jpu/ila_probe[3]_40[23]} {jpu/ila_probe[3]_40[24]} {jpu/ila_probe[3]_40[25]} {jpu/ila_probe[3]_40[26]} {jpu/ila_probe[3]_40[27]} {jpu/ila_probe[3]_40[28]} {jpu/ila_probe[3]_40[29]} {jpu/ila_probe[3]_40[30]} {jpu/ila_probe[3]_40[31]}]]
-
-create_debug_port u_ila_0 probe
-set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe4]
-set_property port_width 32 [get_debug_ports u_ila_0/probe4]
-connect_debug_port u_ila_0/probe4 [get_nets [list {jpu/ila_probe[4]_40[0]} {jpu/ila_probe[4]_40[1]} {jpu/ila_probe[4]_40[2]} {jpu/ila_probe[4]_40[3]} {jpu/ila_probe[4]_40[4]} {jpu/ila_probe[4]_40[5]} {jpu/ila_probe[4]_40[6]} {jpu/ila_probe[4]_40[7]} {jpu/ila_probe[4]_40[8]} {jpu/ila_probe[4]_40[9]} {jpu/ila_probe[4]_40[10]} {jpu/ila_probe[4]_40[11]} {jpu/ila_probe[4]_40[12]} {jpu/ila_probe[4]_40[13]} {jpu/ila_probe[4]_40[14]} {jpu/ila_probe[4]_40[15]} {jpu/ila_probe[4]_40[16]} {jpu/ila_probe[4]_40[17]} {jpu/ila_probe[4]_40[18]} {jpu/ila_probe[4]_40[19]} {jpu/ila_probe[4]_40[20]} {jpu/ila_probe[4]_40[21]} {jpu/ila_probe[4]_40[22]} {jpu/ila_probe[4]_40[23]} {jpu/ila_probe[4]_40[24]} {jpu/ila_probe[4]_40[25]} {jpu/ila_probe[4]_40[26]} {jpu/ila_probe[4]_40[27]} {jpu/ila_probe[4]_40[28]} {jpu/ila_probe[4]_40[29]} {jpu/ila_probe[4]_40[30]} {jpu/ila_probe[4]_40[31]}]]
-
-connect_debug_port u_ila_0/probe4 [get_nets [list {jpu/ila_probe[4]_39[0]} {jpu/ila_probe[4]_39[1]} {jpu/ila_probe[4]_39[2]} {jpu/ila_probe[4]_39[3]} {jpu/ila_probe[4]_39[4]} {jpu/ila_probe[4]_39[5]} {jpu/ila_probe[4]_39[6]} {jpu/ila_probe[4]_39[7]} {jpu/ila_probe[4]_39[8]} {jpu/ila_probe[4]_39[9]} {jpu/ila_probe[4]_39[10]} {jpu/ila_probe[4]_39[11]} {jpu/ila_probe[4]_39[12]} {jpu/ila_probe[4]_39[13]} {jpu/ila_probe[4]_39[14]} {jpu/ila_probe[4]_39[15]} {jpu/ila_probe[4]_39[16]} {jpu/ila_probe[4]_39[17]} {jpu/ila_probe[4]_39[18]} {jpu/ila_probe[4]_39[19]} {jpu/ila_probe[4]_39[20]} {jpu/ila_probe[4]_39[21]} {jpu/ila_probe[4]_39[22]} {jpu/ila_probe[4]_39[23]} {jpu/ila_probe[4]_39[24]} {jpu/ila_probe[4]_39[25]} {jpu/ila_probe[4]_39[26]} {jpu/ila_probe[4]_39[27]} {jpu/ila_probe[4]_39[28]} {jpu/ila_probe[4]_39[29]} {jpu/ila_probe[4]_39[30]} {jpu/ila_probe[4]_39[31]}]]
-
-create_debug_port u_ila_0 probe
-set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe5]
-set_property port_width 32 [get_debug_ports u_ila_0/probe5]
-connect_debug_port u_ila_0/probe5 [get_nets [list {jpu/ila_probe[5]_39[0]} {jpu/ila_probe[5]_39[1]} {jpu/ila_probe[5]_39[2]} {jpu/ila_probe[5]_39[3]} {jpu/ila_probe[5]_39[4]} {jpu/ila_probe[5]_39[5]} {jpu/ila_probe[5]_39[6]} {jpu/ila_probe[5]_39[7]} {jpu/ila_probe[5]_39[8]} {jpu/ila_probe[5]_39[9]} {jpu/ila_probe[5]_39[10]} {jpu/ila_probe[5]_39[11]} {jpu/ila_probe[5]_39[12]} {jpu/ila_probe[5]_39[13]} {jpu/ila_probe[5]_39[14]} {jpu/ila_probe[5]_39[15]} {jpu/ila_probe[5]_39[16]} {jpu/ila_probe[5]_39[17]} {jpu/ila_probe[5]_39[18]} {jpu/ila_probe[5]_39[19]} {jpu/ila_probe[5]_39[20]} {jpu/ila_probe[5]_39[21]} {jpu/ila_probe[5]_39[22]} {jpu/ila_probe[5]_39[23]} {jpu/ila_probe[5]_39[24]} {jpu/ila_probe[5]_39[25]} {jpu/ila_probe[5]_39[26]} {jpu/ila_probe[5]_39[27]} {jpu/ila_probe[5]_39[28]} {jpu/ila_probe[5]_39[29]} {jpu/ila_probe[5]_39[30]} {jpu/ila_probe[5]_39[31]}]]
-
-connect_debug_port u_ila_0/probe5 [get_nets [list {jpu/ila_probe[5]_38[0]} {jpu/ila_probe[5]_38[1]} {jpu/ila_probe[5]_38[2]} {jpu/ila_probe[5]_38[3]} {jpu/ila_probe[5]_38[4]} {jpu/ila_probe[5]_38[5]} {jpu/ila_probe[5]_38[6]} {jpu/ila_probe[5]_38[7]} {jpu/ila_probe[5]_38[8]} {jpu/ila_probe[5]_38[9]} {jpu/ila_probe[5]_38[10]} {jpu/ila_probe[5]_38[11]} {jpu/ila_probe[5]_38[12]} {jpu/ila_probe[5]_38[13]} {jpu/ila_probe[5]_38[14]} {jpu/ila_probe[5]_38[15]} {jpu/ila_probe[5]_38[16]} {jpu/ila_probe[5]_38[17]} {jpu/ila_probe[5]_38[18]} {jpu/ila_probe[5]_38[19]} {jpu/ila_probe[5]_38[20]} {jpu/ila_probe[5]_38[21]} {jpu/ila_probe[5]_38[22]} {jpu/ila_probe[5]_38[23]} {jpu/ila_probe[5]_38[24]} {jpu/ila_probe[5]_38[25]} {jpu/ila_probe[5]_38[26]} {jpu/ila_probe[5]_38[27]} {jpu/ila_probe[5]_38[28]} {jpu/ila_probe[5]_38[29]} {jpu/ila_probe[5]_38[30]} {jpu/ila_probe[5]_38[31]}]]
-
-create_debug_port u_ila_0 probe
-set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe6]
-set_property port_width 32 [get_debug_ports u_ila_0/probe6]
-connect_debug_port u_ila_0/probe6 [get_nets [list {jpu/ila_probe[6]_38[0]} {jpu/ila_probe[6]_38[1]} {jpu/ila_probe[6]_38[2]} {jpu/ila_probe[6]_38[3]} {jpu/ila_probe[6]_38[4]} {jpu/ila_probe[6]_38[5]} {jpu/ila_probe[6]_38[6]} {jpu/ila_probe[6]_38[7]} {jpu/ila_probe[6]_38[8]} {jpu/ila_probe[6]_38[9]} {jpu/ila_probe[6]_38[10]} {jpu/ila_probe[6]_38[11]} {jpu/ila_probe[6]_38[12]} {jpu/ila_probe[6]_38[13]} {jpu/ila_probe[6]_38[14]} {jpu/ila_probe[6]_38[15]} {jpu/ila_probe[6]_38[16]} {jpu/ila_probe[6]_38[17]} {jpu/ila_probe[6]_38[18]} {jpu/ila_probe[6]_38[19]} {jpu/ila_probe[6]_38[20]} {jpu/ila_probe[6]_38[21]} {jpu/ila_probe[6]_38[22]} {jpu/ila_probe[6]_38[23]} {jpu/ila_probe[6]_38[24]} {jpu/ila_probe[6]_38[25]} {jpu/ila_probe[6]_38[26]} {jpu/ila_probe[6]_38[27]} {jpu/ila_probe[6]_38[28]} {jpu/ila_probe[6]_38[29]} {jpu/ila_probe[6]_38[30]} {jpu/ila_probe[6]_38[31]}]]
-
-connect_debug_port u_ila_0/probe6 [get_nets [list {jpu/ila_probe[7]_36[0]} {jpu/ila_probe[7]_36[1]} {jpu/ila_probe[7]_36[2]} {jpu/ila_probe[7]_36[3]} {jpu/ila_probe[7]_36[4]} {jpu/ila_probe[7]_36[5]} {jpu/ila_probe[7]_36[6]} {jpu/ila_probe[7]_36[7]} {jpu/ila_probe[7]_36[8]} {jpu/ila_probe[7]_36[9]} {jpu/ila_probe[7]_36[10]} {jpu/ila_probe[7]_36[11]} {jpu/ila_probe[7]_36[12]} {jpu/ila_probe[7]_36[13]} {jpu/ila_probe[7]_36[14]} {jpu/ila_probe[7]_36[15]} {jpu/ila_probe[7]_36[16]} {jpu/ila_probe[7]_36[17]} {jpu/ila_probe[7]_36[18]} {jpu/ila_probe[7]_36[19]} {jpu/ila_probe[7]_36[20]} {jpu/ila_probe[7]_36[21]} {jpu/ila_probe[7]_36[22]} {jpu/ila_probe[7]_36[23]} {jpu/ila_probe[7]_36[24]} {jpu/ila_probe[7]_36[25]} {jpu/ila_probe[7]_36[26]} {jpu/ila_probe[7]_36[27]} {jpu/ila_probe[7]_36[28]} {jpu/ila_probe[7]_36[29]} {jpu/ila_probe[7]_36[30]} {jpu/ila_probe[7]_36[31]}]]
-
-create_debug_port u_ila_0 probe
-set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe7]
-set_property port_width 32 [get_debug_ports u_ila_0/probe7]
-connect_debug_port u_ila_0/probe7 [get_nets [list {jpu/ila_probe[7]_37[0]} {jpu/ila_probe[7]_37[1]} {jpu/ila_probe[7]_37[2]} {jpu/ila_probe[7]_37[3]} {jpu/ila_probe[7]_37[4]} {jpu/ila_probe[7]_37[5]} {jpu/ila_probe[7]_37[6]} {jpu/ila_probe[7]_37[7]} {jpu/ila_probe[7]_37[8]} {jpu/ila_probe[7]_37[9]} {jpu/ila_probe[7]_37[10]} {jpu/ila_probe[7]_37[11]} {jpu/ila_probe[7]_37[12]} {jpu/ila_probe[7]_37[13]} {jpu/ila_probe[7]_37[14]} {jpu/ila_probe[7]_37[15]} {jpu/ila_probe[7]_37[16]} {jpu/ila_probe[7]_37[17]} {jpu/ila_probe[7]_37[18]} {jpu/ila_probe[7]_37[19]} {jpu/ila_probe[7]_37[20]} {jpu/ila_probe[7]_37[21]} {jpu/ila_probe[7]_37[22]} {jpu/ila_probe[7]_37[23]} {jpu/ila_probe[7]_37[24]} {jpu/ila_probe[7]_37[25]} {jpu/ila_probe[7]_37[26]} {jpu/ila_probe[7]_37[27]} {jpu/ila_probe[7]_37[28]} {jpu/ila_probe[7]_37[29]} {jpu/ila_probe[7]_37[30]} {jpu/ila_probe[7]_37[31]}]]
-
-connect_debug_port u_ila_0/probe7 [get_nets [list {jpu/ila_probe[6]_37[0]} {jpu/ila_probe[6]_37[1]} {jpu/ila_probe[6]_37[2]} {jpu/ila_probe[6]_37[3]} {jpu/ila_probe[6]_37[4]} {jpu/ila_probe[6]_37[5]} {jpu/ila_probe[6]_37[6]} {jpu/ila_probe[6]_37[7]} {jpu/ila_probe[6]_37[8]} {jpu/ila_probe[6]_37[9]} {jpu/ila_probe[6]_37[10]} {jpu/ila_probe[6]_37[11]} {jpu/ila_probe[6]_37[12]} {jpu/ila_probe[6]_37[13]} {jpu/ila_probe[6]_37[14]} {jpu/ila_probe[6]_37[15]} {jpu/ila_probe[6]_37[16]} {jpu/ila_probe[6]_37[17]} {jpu/ila_probe[6]_37[18]} {jpu/ila_probe[6]_37[19]} {jpu/ila_probe[6]_37[20]} {jpu/ila_probe[6]_37[21]} {jpu/ila_probe[6]_37[22]} {jpu/ila_probe[6]_37[23]} {jpu/ila_probe[6]_37[24]} {jpu/ila_probe[6]_37[25]} {jpu/ila_probe[6]_37[26]} {jpu/ila_probe[6]_37[27]} {jpu/ila_probe[6]_37[28]} {jpu/ila_probe[6]_37[29]} {jpu/ila_probe[6]_37[30]} {jpu/ila_probe[6]_37[31]}]]
-connect_debug_port dbg_hub/clk [get_nets u_ila_1_clkfbout_buf_clk_wiz_0]
+#kdata
+set_property LOC RAMB36_X2Y0 [get_cells {jpu/ram_kdata/ram_single/byte_write[1].BRAM_reg_0}]
+set_property LOC RAMB36_X1Y0 [get_cells {jpu/ram_kdata/ram_single/byte_write[1].BRAM_reg_1}]
+set_property LOC RAMB36_X0Y1 [get_cells {jpu/ram_kdata/ram_single/byte_write[1].BRAM_reg_2}]
+set_property LOC RAMB36_X1Y2 [get_cells {jpu/ram_kdata/ram_single/byte_write[1].BRAM_reg_3}]
 
 
-set_property C_CLK_INPUT_FREQ_HZ 100000000 [get_debug_cores dbg_hub]
-set_property C_ENABLE_CLK_DIVIDER false [get_debug_cores dbg_hub]
-set_property C_USER_SCAN_CHAIN 1 [get_debug_cores dbg_hub]
-connect_debug_port dbg_hub/clk [get_nets u_ila_0_clk100MHz_clk_wiz_0]

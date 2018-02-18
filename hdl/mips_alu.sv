@@ -1,6 +1,7 @@
 `include "mips_defines.vh"
 `include "jpu.svh"
 
+import jpu::*;
 
 ////
 //// mips_ALU: Performs all arithmetic and logical operations
@@ -19,7 +20,7 @@ module mips_alu(/*AUTOARG*/
    );
 
    input [31:0]  alu_in1, alu_in2;
-   input [3:0]   alu_op;
+   input  aluop_s alu_op;
 
    output reg [31:0] alu_out;
    output [2:0]      alu_cmp;
@@ -33,10 +34,10 @@ module mips_alu(/*AUTOARG*/
    assign alu_cmp[1] = alu_out[31]; //result < 0
    assign alu_cmp[0] = !(alu_cmp[2] | alu_cmp[1]); //result > 0
    
-   assign sra = (alu_op == `ALU_SRA) ? 1'b1:1'b0;
+   assign sra = (alu_op == SRA) ? 1'b1:1'b0;
    
-   assign sub = (alu_op == `ALU_SUB || alu_op == `ALU_SLT ||
-		 alu_op == `ALU_SUBU || alu_op == `ALU_SLTU) ? 1'b1 : 1'b0; 
+   assign sub = (alu_op == SUB || alu_op == SLT ||
+		 alu_op == SUBU || alu_op == SLTU) ? 1'b1 : 1'b0; 
      
    always @(*) begin   
       alu_and = alu_in1 & alu_in2;
@@ -49,21 +50,20 @@ module mips_alu(/*AUTOARG*/
    
    always @(*) begin
       case(alu_op)
-	`ALU_NOP: alu_out = alu_in1;
-	`ALU_SYSCALL: alu_out = 32'b0;
-	`ALU_SRL, `ALU_SRA: alu_out = alu_sr;
-	`ALU_SLL: alu_out = alu_sl;
-	`ALU_ADD, `ALU_ADDU: alu_out = alu_add;
-	`ALU_SUB, `ALU_SUBU: alu_out = alu_add;
-	`ALU_AND: alu_out = alu_and;
-	`ALU_OR: alu_out = alu_or;
-	`ALU_XOR: alu_out = alu_xor;
-	`ALU_NOR: alu_out = !alu_or;
-	`ALU_SLT, `ALU_SLTU: alu_out = {31'b0, alu_add[31]}; //set on sign bit of op1-op2
-	`ALU_LUI: alu_out = {alu_in2[15:0], 16'b0};
+	NOP: alu_out = alu_in1;
+	SYSCALL: alu_out = 32'b0;
+	SRL, SRA: alu_out = alu_sr;
+	SLL: alu_out = alu_sl;
+	ADD, ADDU: alu_out = alu_add;
+	SUB, SUBU: alu_out = alu_add;
+	AND: alu_out = alu_and;
+	OR: alu_out = alu_or;
+	XOR: alu_out = alu_xor;
+	NOR: alu_out = !alu_or;
+	SLT, SLTU: alu_out = {31'b0, alu_add[31]}; //set on sign bit of op1-op2
+	LUI: alu_out = {alu_in2[15:0], 16'b0};
 	default: alu_out = 32'b0;
-      endcase // case (alu_op)
-            
+      endcase // case (alu_op)            
    end // always @ begin
 
 endmodule
@@ -186,3 +186,6 @@ module adder(out, in1, in2, sub);
 endmodule // adder
 
 
+// Local Variables:
+// verilog-typedef-regexp: "_[sS]$" 
+// End:

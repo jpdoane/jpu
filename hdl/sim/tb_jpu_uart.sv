@@ -15,16 +15,19 @@ module tb_jpu_uart;
 
    logic 		  halted;
    logic [7:0]		  status;
+   logic [3:0]		  user_btn;
+   logic [7:0] [31:0] 	  ila_probe;
 
    assign halted=status[1];
     		  
    jpu_impl jpu(// Outputs
 		.status_led		(status),
 		.uart_rxd_out		(uart_rxd_out),
+		.ila_probe              (ila_probe),
 		// Inputs
 		.clk			(clk),
 		.rst			(rst),
-		.user_btn		('0),
+		.user_btn		(user_btn),
 		.user_sw		('0),
 		.uart_txd_in		(uart_txd_in));
 
@@ -52,14 +55,25 @@ module tb_jpu_uart;
 		     .uart_divide	(uart_divide[`WORD_SIZE-1:0]));
 
 
-   string 		  tx_string = "Aq\n";
+   string 		  tx_string = "abcdefg";
    initial
      begin
 	rst = 1;
 	uart_tx_data = '0;
 	uart_tx_valid = 1'b0;
+	user_btn <= '0;
 	#75;
 	rst <= 0;
+
+
+	#1000	
+	//push button
+	@(posedge clk);
+	user_btn[3] <= 1'b1;
+	#100000	
+	@(posedge clk);
+	user_btn[3] <= 1'b0;
+
 	for(int i=0;i<tx_string.len();i=i+1) begin	  
 	   #100;
 	   wait(uart_tx_ready);
@@ -70,6 +84,14 @@ module tb_jpu_uart;
 	   @(posedge clk);
 	   uart_tx_valid = 1'b0;
 	end
+
+	// #1000	
+	// //push button
+	// @(posedge clk);
+	// user_btn[3] <= 1'b1;
+	// @(posedge clk);
+	// user_btn[3] <= 1'b0;
+	
      end
 
     always @(posedge clk) begin

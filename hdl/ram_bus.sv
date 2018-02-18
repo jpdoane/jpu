@@ -15,7 +15,7 @@ module ram_bus(/*AUTOARG*/
    clk, rst, ram_rst, bus_i
    );
 
-   parameter initfile="mem.dat";
+   parameter initfile="";
    parameter bus::slave_info_s slaveInfo = bus::slave_info('0,'h1000);
    
    localparam addr_width = $clog2(slaveInfo.words);

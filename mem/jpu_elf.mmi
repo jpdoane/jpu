@@ -3,22 +3,22 @@
   <Processor Endianness="Little" InstPath="jpu">
     <AddressSpace Name="text" Begin="4194304" End="4198399">
       <BusBlock>
-	<BitLane MemType="RAMB32" Placement="X1Y5">
+	<BitLane MemType="RAMB32" Placement="X2Y14">
           <DataWidth MSB="7" LSB="0"/>
           <AddressRange Begin="4194304" End="4198399"/>
           <Parity ON="false" NumBits="0"/>
         </BitLane>
-	<BitLane MemType="RAMB32" Placement="X1Y6">
+	<BitLane MemType="RAMB32" Placement="X1Y16">
           <DataWidth MSB="15" LSB="8"/>
           <AddressRange Begin="4194304" End="4198399"/>
           <Parity ON="false" NumBits="0"/>
         </BitLane>
-	<BitLane MemType="RAMB32" Placement="X2Y6">
+	<BitLane MemType="RAMB32" Placement="X2Y13">
           <DataWidth MSB="23" LSB="16"/>
           <AddressRange Begin="4194304" End="4198399"/>
           <Parity ON="false" NumBits="0"/>
         </BitLane>
-	<BitLane MemType="RAMB32" Placement="X2Y5">
+	<BitLane MemType="RAMB32" Placement="X1Y14">
           <DataWidth MSB="31" LSB="24"/>
           <AddressRange Begin="4194304" End="4198399"/>
           <Parity ON="false" NumBits="0"/>
@@ -45,6 +45,54 @@
 	<BitLane MemType="RAMB32" Placement="X2Y4">
           <DataWidth MSB="31" LSB="24"/>
           <AddressRange Begin="268435456" End="268439551"/>
+          <Parity ON="false" NumBits="0"/>
+        </BitLane>
+      </BusBlock>
+    </AddressSpace>
+    <AddressSpace Name="ktext" Begin="2147483648" End="2147487743">
+      <BusBlock>
+	<BitLane MemType="RAMB32" Placement="X1Y13">
+          <DataWidth MSB="7" LSB="0"/>
+          <AddressRange Begin="2147483648" End="2147487743"/>
+          <Parity ON="false" NumBits="0"/>
+        </BitLane>
+	<BitLane MemType="RAMB32" Placement="X1Y17">
+          <DataWidth MSB="15" LSB="8"/>
+          <AddressRange Begin="2147483648" End="2147487743"/>
+          <Parity ON="false" NumBits="0"/>
+        </BitLane>
+	<BitLane MemType="RAMB32" Placement="X1Y12">
+          <DataWidth MSB="23" LSB="16"/>
+          <AddressRange Begin="2147483648" End="2147487743"/>
+          <Parity ON="false" NumBits="0"/>
+        </BitLane>
+	<BitLane MemType="RAMB32" Placement="X1Y15">
+          <DataWidth MSB="31" LSB="24"/>
+          <AddressRange Begin="2147483648" End="2147487743"/>
+          <Parity ON="false" NumBits="0"/>
+        </BitLane>
+      </BusBlock>
+    </AddressSpace>
+    <AddressSpace Name="kdata" Begin="2415919104" End="2415923199">
+      <BusBlock>
+	<BitLane MemType="RAMB32" Placement="X2Y0">
+          <DataWidth MSB="7" LSB="0"/>
+          <AddressRange Begin="2415919104" End="2415923199"/>
+          <Parity ON="false" NumBits="0"/>
+        </BitLane>
+	<BitLane MemType="RAMB32" Placement="X1Y0">
+          <DataWidth MSB="15" LSB="8"/>
+          <AddressRange Begin="2415919104" End="2415923199"/>
+          <Parity ON="false" NumBits="0"/>
+        </BitLane>
+	<BitLane MemType="RAMB32" Placement="X0Y1">
+          <DataWidth MSB="23" LSB="16"/>
+          <AddressRange Begin="2415919104" End="2415923199"/>
+          <Parity ON="false" NumBits="0"/>
+        </BitLane>
+	<BitLane MemType="RAMB32" Placement="X1Y2">
+          <DataWidth MSB="31" LSB="24"/>
+          <AddressRange Begin="2415919104" End="2415923199"/>
           <Parity ON="false" NumBits="0"/>
         </BitLane>
       </BusBlock>

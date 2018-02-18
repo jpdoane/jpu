@@ -13,14 +13,18 @@ import bus::*;
 
 module uart_bus(/*AUTOARG*/
    // Outputs
-   uart_rxd_out, bus_o, ila_probe,
+   uart_rxd_out, bus_o, uart_rx_int, uart_tx_int, ila_probe,
    // Inputs
    clk, rst, uart_txd_in, bus_i
    );
 
-   parameter bus::slave_info_s slaveInfo = bus::slave_info('0,'0);
+   parameter slave_info_s slaveInfo = slave_info(`UART_SEG_BASE,`UART_SEG_WORDS);
+   
+   // localparam logic [31:0] seg_base = `UART_SEG_BASE;
+   // localparam logic [29:0] seg_words = `UART_SEG_WORDS;
+   // localparam logic [29:0] seg_start = slaveInfo.base >> 2;
+   // localparam logic [29:0] seg_top = seg_start + seg_words;
    localparam addr_width = $clog2(slaveInfo.words);
-//   localparam addr_width = $clog2('hF);
    
    input       clk;
    input       rst;   
@@ -29,6 +33,8 @@ module uart_bus(/*AUTOARG*/
 
    input       bus::m2s_s bus_i;
    output      bus::s2m_s bus_o;
+   output      uart_rx_int;
+   output      uart_tx_int;
 
    //ila_probes
    output [31:0] ila_probe[1:0];
@@ -38,16 +44,15 @@ module uart_bus(/*AUTOARG*/
 
    wire        tx_fifo_empty, tx_fifo_full, tx_fifo_overflow;
    wire        rx_fifo_empty, rx_fifo_full, rx_fifo_overflow, rx_fifo_underflow;
-   wire        rx_valid;
+   wire        rx_valid, tx_ready;
    wire        req,wea;
            
-   wire [`WORD_SIZE-3:0] addr_wide;
-   wire [addr_width-1:0] uart_addr;
+   wire [`WORD_SIZE-1:0] addr;
    wire        addr_err;       
    wire        re, we;
 
    wire [`WORD_SIZE-1:0] write_mask;
-   reg [`WORD_SIZE-1:0] uart_control, uart_divide, uart_status;
+   reg [`WORD_SIZE-1:0]  uart_rx_control, uart_tx_control, uart_divide;
    wire [7:0] 		tx_data, rx_data;
    
    
@@ -105,21 +110,19 @@ module uart_bus(/*AUTOARG*/
    assign bus_o_reg.stall = 0; // we can always respond on next clock
    assign uart_tx_err = 0; //no way to get tx err (yet)
    
-
    assign req = bus_i.cyc & bus_i.stb;
    assign wea = {4{bus_i.we}} & bus_i.sel;
    assign addr_err = (bus_i.addr >= slaveInfo.start && bus_i.addr < slaveInfo.top)?0:1;
-   assign addr_wide = bus_i.addr - slaveInfo.start;
-   assign uart_addr = addr_wide[addr_width-1:0];
-
-
+   assign addr = bus_i.addr << 2;
+   assign uart_rx_int = rx_valid & uart_rx_control[`UART_INT_ENABLE_BIT];
+   assign uart_tx_int = tx_ready & uart_tx_control[`UART_INT_ENABLE_BIT];
    
    //update status and control regs
    //writes
    always @(posedge clk) begin
       if (rst) begin
-	 uart_status <= 32'b0;
-	 uart_control <= 32'b0;
+	 uart_tx_control <= 32'b0;
+	 uart_rx_control <= 32'b0;
 	 uart_divide <= `UART_CLK_FREQ/`UART_DEFAULT_BAUDRATE;
 //	 tx_data <= 0;
 //	 we <= 0;
@@ -128,29 +131,32 @@ module uart_bus(/*AUTOARG*/
 //	 tx_data <= 0;
 //	 we <= 0;
 
-	 uart_status <= uart_status;	 
-	 uart_status[`UART_RX_ERROR_BIT] <= uart_status[`UART_RX_ERROR_BIT] | uart_rx_err;    
-	 uart_status[`UART_RX_FIFO_OVERFLOW_BIT] <= uart_status[`UART_RX_FIFO_OVERFLOW_BIT] | rx_fifo_overflow;
-	 uart_status[`UART_RX_FIFO_FULL_BIT] <= rx_fifo_full;
-	 uart_status[`UART_RX_FIFO_EMPTY_BIT] <= rx_fifo_empty;
-	 uart_status[`UART_TX_ERROR_BIT] <= uart_status[`UART_TX_ERROR_BIT] | uart_tx_err;    
-	 uart_status[`UART_TX_FIFO_OVERFLOW_BIT] <= uart_status[`UART_TX_FIFO_OVERFLOW_BIT] | tx_fifo_overflow;
-	 uart_status[`UART_TX_FIFO_FULL_BIT] <= tx_fifo_full;
-	 uart_status[`UART_TX_FIFO_EMPTY_BIT] <= tx_fifo_empty;
-	 uart_status[`UART_TX_ACTIVE_BIT] <= tx_active;
-	 uart_status[`UART_RX_ACTIVE_BIT] <= rx_active;
+	 uart_tx_control <= uart_tx_control;
+	 uart_tx_control[`UART_ERROR_BIT] <= uart_tx_control[`UART_ERROR_BIT] | uart_tx_err;
+	 uart_tx_control[`UART_FIFO_OVERFLOW_BIT] <= uart_tx_control[`UART_FIFO_OVERFLOW_BIT] | tx_fifo_overflow;
+	 uart_tx_control[`UART_FIFO_FULL_BIT] <= tx_fifo_full;
+	 uart_tx_control[`UART_FIFO_EMPTY_BIT] <= tx_fifo_empty;    
+	 uart_tx_control[`UART_ACTIVE_BIT] <= tx_active;    
+	 uart_tx_control[`UART_READY_BIT] <= tx_ready;
 
-	 uart_control <= uart_control;
+	 uart_rx_control[`UART_ERROR_BIT] <= uart_rx_control[`UART_ERROR_BIT] | uart_rx_err;
+	 uart_rx_control[`UART_FIFO_OVERFLOW_BIT] <= uart_rx_control[`UART_FIFO_OVERFLOW_BIT] | rx_fifo_overflow;
+	 uart_rx_control[`UART_FIFO_FULL_BIT] <= rx_fifo_full;
+	 uart_rx_control[`UART_FIFO_EMPTY_BIT] <= rx_fifo_empty;    
+	 uart_rx_control[`UART_ACTIVE_BIT] <= rx_active;    
+	 uart_rx_control[`UART_READY_BIT] <= rx_valid;
+	 
 	 uart_divide <= uart_divide;
+
 	 if (bus_i.cyc && bus_i.stb && bus_i.we) begin
-	    case(uart_addr)
-	      `UART_STATUS_REG_WORD: uart_status
+	    case(addr)
+	      `UART_RX_CTRL: uart_rx_control
 		<= ( write_mask & bus_i.data) |
-		   (~write_mask & uart_status);
-	      `UART_CTRL_REG_WORD: uart_control
+		   (~write_mask & uart_rx_control);
+	      `UART_TX_CTRL: uart_tx_control
 		<= ( write_mask & bus_i.data) |
-		   (~write_mask & uart_control);
-	      `UART_DIVIDE_REG_WORD: uart_divide
+		   (~write_mask & uart_tx_control);
+	      `UART_DIV: uart_divide
 		<= ( write_mask & bus_i.data) |
 		   (~write_mask & uart_divide);
 	      /*
@@ -168,9 +174,9 @@ module uart_bus(/*AUTOARG*/
       end
    end
 
-   assign we = ~addr_err && req && bus_i.we && (uart_addr == `UART_TX_PORT_WORD);
+   assign we = ~addr_err && req && bus_i.we && (addr == `UART_TX_DATA);
    assign tx_data = bus_i.data[7:0];
-   assign re = ~addr_err && req && ~bus_i.we && (uart_addr == `UART_RX_PORT_WORD);
+   assign re = ~addr_err && req && ~bus_i.we && (addr == `UART_RX_DATA);
    
    
    //read regs
@@ -192,11 +198,11 @@ module uart_bus(/*AUTOARG*/
 		 bus_o_reg.ack <= 1;
 		 // wrtites handled in other process
 		 if (~bus_i.we) begin // read cmd
-		    case(uart_addr)
-		      `UART_STATUS_REG_WORD: bus_o_reg.data <= uart_status;
-		      `UART_CTRL_REG_WORD: bus_o_reg.data <= uart_control;
-		      `UART_DIVIDE_REG_WORD: bus_o_reg.data <= uart_divide;
-		      `UART_RX_PORT_WORD:
+		    case(addr)
+		      `UART_RX_CTRL: bus_o_reg.data <= uart_rx_control;
+		      `UART_TX_CTRL: bus_o_reg.data <= uart_tx_control;
+		      `UART_DIV: bus_o_reg.data <= uart_divide;
+		      `UART_RX_DATA:
 			begin
 			   //trigger read from fifo
 			   //this actually reads off existing fifo output and then pops fifo
@@ -212,6 +218,7 @@ module uart_bus(/*AUTOARG*/
      end // always @ (posedge clk)
 
 
+   assign tx_ready = ~tx_fifo_full;
    uart_fifo tx_fifo (
 		      .clk(clk),              // input wire clk
 		      .srst(rst),            // input wire srst
@@ -242,37 +249,8 @@ module uart_bus(/*AUTOARG*/
 		      .underflow(rx_fifo_underflow)  // output wire underflow
 		      );
 
-   //from uart_rxk
-   assign ila_probe[0][31] = rxd;
-   assign ila_probe[0][30] = uart_rx_valid;
-   assign ila_probe[0][29] = uart_rx_err;
-   assign ila_probe[0][28:24] = '0;
-   assign ila_probe[0][23:16] = uart_rx_data;
-   //uart rx fifo
-   assign ila_probe[0][15] = re;
-   assign ila_probe[0][14] = rx_fifo_empty;
-   assign ila_probe[0][13] = rx_fifo_full;
-   assign ila_probe[0][12] = rx_fifo_overflow;
-   assign ila_probe[0][11] = rx_fifo_underflow;
-   assign ila_probe[0][10] = rx_valid;
-   assign ila_probe[0][9:8] = '0;
-   assign ila_probe[0][7:0] = rx_data;
-
-   
-   //to uart_tx
-   assign ila_probe[1][31] = txd;
-   assign ila_probe[1][29] = uart_tx_valid;
-   assign ila_probe[1][30] = uart_tx_ready;
-   assign ila_probe[1][28:24] = '0;
-   assign ila_probe[1][23:16] = uart_tx_data;
-   //uart tx fifo
-   assign ila_probe[1][15] = we;
-   assign ila_probe[1][14] = tx_fifo_empty;
-   assign ila_probe[1][13] = tx_fifo_full;
-   assign ila_probe[1][12] = tx_fifo_overflow;
-   assign ila_probe[1][11:8] = '0;
-   assign ila_probe[1][7:0] = tx_data;
-
+   assign ila_probe[0] = uart_rx_control;
+   assign ila_probe[1] = uart_tx_control;
    
 endmodule // uart_loopback
 

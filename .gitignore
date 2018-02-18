@@ -1,7 +1,9 @@
+jpu
 jpu.*/
 *.mem
 *.elf
 *.o
+*.out
 *~
 *.jou
 *.log
@@ -9,3 +11,8 @@ jpu.*/
 *.bit
 *.dat
 *.txt
+.d/
+*#*
+TODO
+crosstool/
+!crosstool/.config

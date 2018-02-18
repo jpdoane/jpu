@@ -124,16 +124,18 @@
 `define OPZ_COPZS   5'h10
 `define OPZ_COPZD   5'h11
 
+
 // Tertiary opcodes (bczft field; OP_Z[0-3] && OPZ_BCZ)
 `define OPB_BCZF    1'h0
 `define OPB_BCZT    1'h1
 
 // Tertiary opcodes (funct1 field; OP_Z0 && OPZ_COPZS)
-`define OPC_TLBR    5'h01
-`define OPC_TLBWI   5'h02
-`define OPC_TLBWR   5'h06
-`define OPC_TLBP    5'h08
-`define OPC_RFE     5'h10
+//`define OPC_TLBR    5'h01
+//`define OPC_TLBWI   5'h02
+//`define OPC_TLBWR   5'h06
+//`define OPC_TLBP    5'h08
+//`define OPC_RFE     5'h10
+`define OPC_ERET     6'h18
 
 // Secondary opcodes (rt field; OP_OTHER1)
 `define OP1_BLTZ    5'h00
@@ -247,11 +249,32 @@
 `define CR_BADVADDR 'd8
 `define CR_STATUS   'd12
 `define CR_CAUSE    'd13
-
+`define CR_COUNT    'd9
+`define CR_COMPARE  'd11
+`define CR_CONFIG   'd16
 
 ////
 //// Exception Codes
 ////
+// Exception codes
+`define EX_INT    5'd0
+`define EX_MOD    5'd1
+`define EX_TLBL   5'd2
+`define EX_TLBS   5'd3
+`define EX_ADEL   5'd4
+`define EX_ADES   5'd5
+`define EX_IBE    5'd6
+`define EX_DBE    5'd7
+`define EX_SYS    5'd8
+`define EX_BP     5'd9
+`define EX_RI     5'd10
+`define EX_CPU    5'd11
+`define EX_OV     5'd12
+`define EX_TR     5'd13
+`define EX_VCEI   5'd14
+`define EX_FPE    5'd15
+`define EX_WATCH  5'd23
+`define EX_VCED   5'd31
 
 // Left shift amount to align exception code from cause register
 `define EX__SHIFT 'd2
