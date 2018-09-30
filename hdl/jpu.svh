@@ -13,6 +13,7 @@ package jpu;
 			      SLT, SLTU, LUI, NOP} aluop_s;
    typedef enum logic [2:0] {MEM, MEM_SE, ALU, LINK, CP0} regsrc_s;
    typedef enum logic [1:0] {RD, RT, RA} regdst_s;
+   typedef enum logic  {KERNEL, USER} usermode_s;
    
    typedef struct packed {      
       logic       reg_write;	// reg write enable

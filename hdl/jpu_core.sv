@@ -26,46 +26,48 @@ module jpu_core(/*AUTOARG*/
    jpu::dcd_s dcd, dcd_r1;
    
    // pc and flow signals
-   logic 	 rst, en0, en;
-   logic 	 bus_inst_valid, bus_inst_stall;
-   logic [31:0]  inst;
-   logic [31:0]  pc, pc_r1, nextpc, nextpcplus4;
-   logic [29:0]  addr_fetch;
-   logic [31:0]  addr_jump, addr_branch, addr_link;
-   logic 	 branch_en;
-   logic 	 stall, stalled; 	 
+   logic 	rst, en0, en;
+   logic 	bus_inst_valid, bus_inst_stall;
+   logic [31:0] inst;
+   logic [31:0] pc, pc_r1, nextpc, nextpcplus4;
+   logic [29:0] addr_fetch;
+   logic [31:0] addr_jump, addr_branch, addr_link;
+   logic 	branch_en;
+   logic 	stall, stalled; 
 
    // register data
-   logic [31:0]  rt_data, rs_data;
-   logic [4:0]  rd_num;
-   logic [31:0]  reg_write_data;  
+   logic [31:0] rt_data, rs_data;
+   logic [4:0] 	rd_num;
+   logic [31:0] reg_write_data; 
 
    // memory signals
-   logic 	 mem_read_valid, bus_data_stall, mem_req;
-   logic [29:0]  mem_addr;
-   logic [31:0]  mem_read_word, mem_write_word;
-   logic [3:0] 	 mem_mask;
-   logic [31:0]  mem_read_data;
-   logic [31:0]  mem_read_data_se;
+   logic 	mem_read_valid, bus_data_stall, mem_req;
+   logic [29:0] mem_addr;
+   logic [31:0] mem_read_word, mem_write_word;
+   logic [3:0] 	mem_mask;
+   logic [31:0] mem_read_data;
+   logic [31:0] mem_read_data_se;
 
    // alu signals
-   logic [31:0]  alu_out, alu_out_r1;
-   logic [31:0]  alu_in1, alu_in2;
-   logic [2:0] 	 alu_cmp;		// From ALU of mips_alu.v
+   logic [31:0] alu_out, alu_out_r1;
+   logic [31:0] alu_in1, alu_in2;
+   logic [2:0] 	alu_cmp;		// From ALU of mips_alu.v
    aluop_s 	 alu_op;			// From Decoder of mips_decode.v
 
    //cp0 
    exceptions_s excepts;
-   logic 	 mem_except, inst_except;
-   logic 	 write_align_except, read_align_except;
+   logic 	 inst_bus_err, data_bus_err;
+   logic         addr_load_err, addr_store_err; 	 
+   logic 	 write_align_err, read_align_err;
    logic 	 raise_exception, eret;
+   usermode_s 	 user_mode; 	 
    logic [31:0]  cp0_data_out, cp0_data_r1;   
    logic [31:0]  epc, vaddr;   
    
    //reset and enables...
    always @(posedge clk) begin
       rst <= ~rst_b;
-      en0 <= rst_b;;			  // pre-enable (arms fetch on 1st inst)
+      en0 <= rst_b;			  // pre-enable (arms fetch on 1st inst)
       en <= en0;			  // cpu enable
    end
 
@@ -147,7 +149,7 @@ module jpu_core(/*AUTOARG*/
 		  .dcd			(dcd),
 		  // Inputs
 		  .inst			(inst[31:0]),
-		  .en			(en & ~stalled));
+		  .en			(en));
    
    // data to write to register
    // piplelined to accomodate mem read delay
@@ -229,7 +231,7 @@ module jpu_core(/*AUTOARG*/
 			      .data_o		(inst),
 			      .valid_o		(bus_inst_valid),
 			      .stall_o		(bus_inst_stall),
-			      .err_o		(inst_except),
+			      .err_o		(inst_bus_err),
 			      .bus_o		(bus_master_inst_out),
 			      // Inputs
 			      .clk		(clk),
@@ -239,6 +241,7 @@ module jpu_core(/*AUTOARG*/
 			      .data_i		('0),
 			      .addr_i		(addr_fetch),
 			      .byte_mask_i	('1),
+			      .user_mode        (user_mode),
 			      .bus_i		(bus_master_inst_in));
 
 
@@ -250,14 +253,14 @@ module jpu_core(/*AUTOARG*/
 				   //Outputs
 				   .data_align(mem_write_word), // full word with properly aligned data
 				   .mask(mem_mask),
-				   .align_except(write_align_except));
+				   .align_except(write_align_err));
 
    
    bus_master bus_data_master( // Outputs
 			       .data_o		(mem_read_word),
 			       .valid_o		(mem_read_valid),
 			       .stall_o		(bus_data_stall),
-			       .err_o		(mem_except),
+			       .err_o		(data_bus_err),
 			       .bus_o		(bus_master_data_out),
 			       // Inputs
 			       .clk		(clk),
@@ -267,6 +270,7 @@ module jpu_core(/*AUTOARG*/
 			       .data_i		(mem_write_word),
 			       .addr_i		(mem_addr),
 			       .byte_mask_i	(mem_mask),
+ 			       .user_mode        (user_mode),
 			       .bus_i		(bus_master_data_in));
    
    
@@ -278,27 +282,29 @@ module jpu_core(/*AUTOARG*/
 				 //Outputs
 				 .data(mem_read_data), //data shifted to lsb
 				 .data_se(mem_read_data_se), //data shifted to lsb, sign extened
-				 .align_except(read_align_except));
+				 .align_except(read_align_err));
 
    //coproc 0 interrupts and exceptions
    always @(*) begin
-      excepts = '0; // set unimplemented excepts to zero
-      excepts.RI = ctrl.inst_except;
-      excepts.Sys = ctrl.sys_except;
-      excepts.IBE = inst_except;
-      excepts.DBE = mem_except;
-      excepts.AdEL = inst_except | (mem_except & ctrl_r1.mem_read) | read_align_except;
-      excepts.AdES = mem_except & ctrl_r1.mem_write | write_align_except;   
-      vaddr = inst_except ? pc :
-	      write_align_except ? alu_out :
-	      read_align_except | mem_except ? alu_out_r1 :
-	      '0;
+      excepts 	    = '0; // set unimplemented excepts to zero
+      excepts.RI    = ctrl.inst_except;
+      excepts.Sys   = ctrl.sys_except;
+      excepts.IBE   = inst_bus_err;
+      excepts.DBE   = data_bus_err;
+      excepts.AdEL  = read_align_err;
+      excepts.AdES  = write_align_err;
+      excepts.CpU   = ((user_mode==USER) && (ctrl.cp0_op != CP0NOP)) ? 1'b1 : 1'b0;
+      vaddr 	    = inst_bus_err ? pc :
+		      write_align_err ? alu_out :
+		      read_align_err | data_bus_err ? alu_out_r1 :
+		      '0;
    end // always @ (*)
    
    cp0 CP0(// Outputs
 	   .cp0_data_out		(cp0_data_out),
 	   .raise_exception		(raise_exception),
 	   .eret                        (eret),
+	   .user_mode (user_mode),
 	   // Inputs
 	   .clk				(clk),
 	   .rst				(rst),
@@ -331,146 +337,8 @@ module jpu_core(/*AUTOARG*/
    assign  ila_probe[5][30] = en;
    assign  ila_probe[5][31] = rst;
    
-endmodule // mips_core
+endmodule // jpu_core
 
-
-module mem_write_align(/*AUTOARG*/
-   // Outputs
-   data_align, mask, align_except,
-   // Inputs
-   data, addr_lsb, size, en
-   );
-
-   input [31:0] data;
-   input [1:0] 	addr_lsb;
-   input memsize_s size;
-   input       en;   
-   output reg [31:0] data_align;
-   output reg [3:0]  mask;
-   output reg align_except;
-
-   always @(*) begin
-      mask = 4'h0;
-      data_align = 32'h0;
-      align_except = 1'b0;
-      if(en) begin
-	 case(size)
-	   BYTE: //BYTE (these come from the lest sig bits of mips opcode)
-	     case(addr_lsb)
-	       2'b00:
-		 begin
-		    mask = 4'b0001;
-		    data_align = data;
-		 end
-	       2'b01:
-		 begin
-		    mask = 4'b0010;
-		    data_align = data << 8;
-		 end
-	       2'b10:
-		 begin
-		    mask = 4'b0100;
-		    data_align = data << 16;
-		 end
-	       2'b11:
-		 begin
-		    mask = 4'b1000;
-		    data_align = data << 24;
-		 end
-	     endcase // case (addr[1:0])	
-	   HALF: //HALFWORD
-	     case(addr_lsb)
-	       2'b00:
-		 begin
-		    mask = 4'b0011;
-		    data_align = data;
-		 end
-	       2'b10:
-		 begin
-		    mask = 4'b1100;
-		    data_align = data << 16;
-		 end
-	       default:
-		 align_except = 1'b1;
-	     endcase // case (addr[1:0])
-	   WORD: //WORD	  
-	     case(addr_lsb)
-	       2'b00:
-		 begin
-		    mask = 4'b1111;
-		    data_align = data;
-		 end
-	       default:
-		 align_except = 1'b1;
-	     endcase // case (addr[1:0])
-	   default:
-	     align_except = 1'b0;
-	 endcase // case (size)
-      end // if (en)      
-   end   
-endmodule // mem_align
-
-module mem_read_align(/*AUTOARG*/
-   // Outputs
-   data, data_se, align_except,
-   // Inputs
-   data_align, addr_lsb, size, en
-   );
-
-   input [31:0] data_align;
-   input [1:0] 	addr_lsb;
-   input memsize_s size;
-   input       en;
-   
-   output reg [31:0] data;
-   output reg [31:0] data_se;
-   output reg align_except;
-
-   always @(*) begin
-      data = 32'h0;
-      data_se = 32'h0;
-      align_except = 1'b0;
-      if (en) begin
-	 case(size)
-	   BYTE: //BYTE (these come from the lest sig bits of mips opcode)
-	     begin
-		case(addr_lsb)
-		  2'b00: data = {24'h0, data_align[7:0]};
-		  2'b01: data = {24'h0, data_align[15:8]};
-		  2'b10: data = {24'h0, data_align[23:16]};
-		  2'b11: data = {24'h0, data_align[31:24]};
-		endcase // case (addr[1:0])
-		data_se[7:0] = data[7:0];
-		data_se[31:8] = {24{data[7]}};
-	     end
-	   HALF: //HALFWORD
-	     begin
-		case(addr_lsb)
-		  2'b00: data = {16'h0, data_align[15:0]};
-		  2'b10: data = {16'h0, data_align[31:16]};
-		  default:
-		    align_except = 1'b1;
-		endcase // case (addr[1:0])
-		data_se[15:0] = data[15:0];
-		data_se[31:16] = {16{data[15]}};
-	     end
-	   WORD: //WORD
-	     begin
-		case(addr_lsb)
-		  2'b00: data = data_align;
-		  default:
-		    align_except = 1'b1;
-		endcase // case (addr[1:0])
-		data_se = data;
-	     end
-	   default:
-	     align_except = 1'b0;
-	 endcase // case (size)
-      end // if (en)      
-   end   
-endmodule // mem_align
-
-   
 
 // Local Variables:
 // verilog-typedef-regexp: "_[sS]$" 

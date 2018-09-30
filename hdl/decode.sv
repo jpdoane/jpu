@@ -11,7 +11,8 @@ module decode(/*AUTOARG*/
    );
 
    input [31:0]      inst;
-   input 	     en; 	     
+   input 	     en;
+//   input usermode_s  user_mode;
    output 	     ctrl_s ctrl;
    output 	     dcd_s dcd;
 

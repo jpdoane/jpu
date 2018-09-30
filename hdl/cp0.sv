@@ -4,38 +4,39 @@ import jpu::*;
 
 module cp0(/*AUTOARG*/
    // Outputs
-   cp0_data_out, raise_exception, eret,
+   cp0_data_out, raise_exception, eret, user_mode,
    // Inputs
    clk, rst, en, stalled, epc, vaddr, ints_in, excepts, cp0_op,
    cp0_data_in, cp0_reg
    );
    
-   input logic clk, rst, en, stalled;
-   input logic [31:0] epc;
-   input logic [31:0] vaddr;
-   input logic [7:0]  ints_in;
-   input 	      exceptions_s excepts;
-   input 	      cp0op_s cp0_op;
-   input logic [31:0] cp0_data_in;
-   input logic [4:0] cp0_reg;
-   output logic [31:0] cp0_data_out;   
+   input logic 	       clk, rst, en, stalled;
+   input logic [31:0]  epc;
+   input logic [31:0]  vaddr;
+   input logic [7:0]   ints_in;
+   input 	       exceptions_s excepts;
+   input 	       cp0op_s cp0_op;
+   input logic [31:0]  cp0_data_in;
+   input logic [4:0]   cp0_reg;
+   output logic [31:0] cp0_data_out; 
    output logic        raise_exception, eret;
+   output usermode_s   user_mode;
    
    logic [31:0] [31:0] cp0reg;
   
-   logic [15:0]	timer_inner;
-   logic	inc_count;
-   logic        timer_int;
+   logic [15:0]        timer_inner;
+   logic 	       inc_count;
+   logic 	       timer_int;
 
-   logic [7:0] 	interrupts, int_mask;
-   logic 	int_enable, except_enable, except_level, user_mode;
+   logic [7:0] 	       interrupts, int_mask;
+   logic 	       int_enable, except_enable, except_level, user_mode;
 
-   logic [4:0]  except_code;
+   logic [4:0] 	       except_code;
    
    assign int_mask = cp0reg[`CR_STATUS][15:8];
    assign int_enable = cp0reg[`CR_STATUS][0];
    assign except_level = cp0reg[`CR_STATUS][1];
-   assign user_mode = cp0reg[`CR_STATUS][4];
+   assign user_mode = cp0reg[`CR_STATUS][4] == 1 ? USER: KERNEL;
 
    assign cp0_data_out = (en && cp0_op==ERET) ? cp0reg[`CR_EPC] :
 			  (en && cp0_op==MFC0) ? cp0reg[cp0_reg] :

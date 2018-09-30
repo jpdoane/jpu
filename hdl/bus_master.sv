@@ -6,7 +6,8 @@ module bus_master(/*AUTOARG*/
    // Outputs
    data_o, valid_o, stall_o, err_o, bus_o,
    // Inputs
-   clk, rst, en_i, we_i, data_i, addr_i, byte_mask_i, bus_i
+   clk, rst, en_i, we_i, data_i, addr_i, byte_mask_i, user_mode,
+   bus_i
    );
    
    input logic clk, rst;
@@ -14,6 +15,7 @@ module bus_master(/*AUTOARG*/
    input logic [31:0] data_i;
    input logic [29:0] addr_i;
    input logic [3:0]  byte_mask_i;   
+   input 	      usermode_s user_mode; 	       
    output logic [31:0] data_o;
    output logic        valid_o, stall_o, err_o;
    input 	       bus::s2m_s bus_i;
