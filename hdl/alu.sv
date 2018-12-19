@@ -1,67 +1,48 @@
-`include "mips_defines.vh"
-`include "jpu.svh"
+`include "risc-v.svh"
 
-import jpu::*;
-
-////
-//// mips_ALU: Performs all arithmetic and logical operations
-////
-//// alu_out (output) - Final result
-//// alu_in1 (input)  - Operand modified by the operation
-//// alu_in2 (input)  - Operand used (in arithmetic ops) to modify alu_in1
-//// alu_op (input)  - Selects which operation is to be performed
-//// alu_alt (input)  - alternate alu_op functionality (e.g. unsigned, sra, ...)
-////
-module mips_alu(/*AUTOARG*/
+module alu(/*AUTOARG*/
    // Outputs
-   alu_out, alu_cmp,
+   alu_out,
    // Inputs
    alu_in1, alu_in2, alu_op
    );
 
    input [31:0]  alu_in1, alu_in2;
-   input  aluop_s alu_op;
+   input [3:0]   alu_op;
 
-   output reg [31:0] alu_out;
-   output [2:0]      alu_cmp;
+   output logic [31:0] alu_out;
 
-   wire [31:0] 	    alu_add, alu_sl, alu_sr;
-   wire       sub, sra;
-   reg [31:0] 	    alu_and, alu_or, alu_xor;
+   logic [31:0] 	    alu_add, alu_sub, alu_sl, alu_sr;
+   logic [31:0] 	    alu_and, alu_or, alu_xor;
+   logic 		    alu_slt,alu_sltu;
 
-
-   assign alu_cmp[2] = (alu_out==32'b0) ? 1'b1 : 1'b0; //result == 0
-   assign alu_cmp[1] = alu_out[31]; //result < 0
-   assign alu_cmp[0] = !(alu_cmp[2] | alu_cmp[1]); //result > 0
-   
-   assign sra = (alu_op == SRA) ? 1'b1:1'b0;
-   
-   assign sub = (alu_op == SUB || alu_op == SLT ||
-		 alu_op == SUBU || alu_op == SLTU) ? 1'b1 : 1'b0; 
-     
-   always @(*) begin   
+   always @(*) begin      
+      alu_add = alu_in1 + alu_in2;
+      alu_sub = alu_in1 - alu_in2;
       alu_and = alu_in1 & alu_in2;
       alu_or = alu_in1 | alu_in2;
       alu_xor = alu_in1 ^ alu_in2;
+
+      //would be nice to use the existing comparitor block for this, but would require some rewiring & muxes
+      alu_slt = ($signed(alu_in1) < $signed(alu_in2));
+      alu_sltu = (alu_in1 < alu_in2);      
    end
-   adder AdderUnit(alu_add, alu_in1, alu_in2, sub);
-   shift_left shiftLeftUnit(alu_sl, alu_in2, alu_in1[4:0]);
-   shift_right shiftRightUnit(alu_sr, alu_in2, alu_in1[4:0],sra);
+
+   shift_left shiftLeftUnit(alu_sl, alu_in1, alu_in2[4:0]);
+   shift_right shiftRightUnit(alu_sr, alu_in1, alu_in2[4:0],alu_op[3]);
    
    always @(*) begin
       case(alu_op)
-	NOP: alu_out = alu_in1;
-	SYSCALL: alu_out = 32'b0;
-	SRL, SRA: alu_out = alu_sr;
-	SLL: alu_out = alu_sl;
-	ADD, ADDU: alu_out = alu_add;
-	SUB, SUBU: alu_out = alu_add;
-	AND: alu_out = alu_and;
-	OR: alu_out = alu_or;
-	XOR: alu_out = alu_xor;
-	NOR: alu_out = !alu_or;
-	SLT, SLTU: alu_out = {31'b0, alu_add[31]}; //set on sign bit of op1-op2
-	LUI: alu_out = {alu_in2[15:0], 16'b0};
+	`ALU_ADD: alu_out = alu_add;
+	`ALU_SUB: alu_out = alu_sub;
+	`ALU_SLL: alu_out = alu_sl;
+	`ALU_SLT: alu_out = {31'b0, alu_slt};
+	`ALU_SLTU: alu_out = {31'b0, alu_sltu};
+	`ALU_XOR: alu_out = alu_xor;
+	`ALU_SRL, `ALU_SRA: alu_out = alu_sr; //determined by alu_op[3]
+	`ALU_OR: alu_out = alu_or;
+	`ALU_LUI: alu_out = alu_in2;
+	`ALU_AND: alu_out = alu_and;
 	default: alu_out = 32'b0;
       endcase // case (alu_op)            
    end // always @ begin
@@ -168,24 +149,6 @@ module shift_right(/*AUTOARG*/
    end // always @ begin
 endmodule
      
-////
-//// adder
-////
-//// out (output) - adder result
-//// in1 (input)  - Operand1
-//// in2 (input)  - Operand2
-//// sub (input)  - Subtract?
-////
-module adder(out, in1, in2, sub);
-   output [31:0] out;
-   input [31:0]  in1, in2;
-   input         sub;
-
-   assign        out = sub?(in1 - in2):(in1 + in2);
-
-endmodule // adder
-
-
 // Local Variables:
 // verilog-typedef-regexp: "_[sS]$" 
 // End:

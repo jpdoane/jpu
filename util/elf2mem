@@ -2,27 +2,43 @@
 
 import sys, re
 
-regex_memline = r"^\s*([0-9a-fA-F]+)\s+(([0-9a-fA-F]{8}\s+)+)"
+regex_section = r"^Contents of section .([a-zA-Z0-9_]+):"
+regex_memline = r"^\s*([0-9a-fA-F]+)\s+(([0-9a-fA-F]+\s+)+)"
 
 nextaddr = -1
 
+if(len(sys.argv) < 2 or sys.argv[1]== "-h"):
+    print "Convert one or more sections from objdump of elf file to ascii mem file for blockram initialization"
+    print "Nonsequential memory locations will be zero-filled, so use care when converting multiple sections together"
+    print ""
+    print "Usage: objdump -s prog.elf | elf2mem section1 section2 ... > prog.mem"
+    exit(0)
+
+sections = sys.argv[1:]
+currentSection = ""
+
 for line in sys.stdin:
+    sectionline = re.match(regex_section, line, flags=0)
+    if(sectionline):
+        currentSection = sectionline.group(1)
+        #print "Section " + currentSection + ":"            
+
     memline = re.match(regex_memline, line, flags=0)
-    if(memline):
+    if( memline and currentSection in sections):
         #memline_LE = "@" + memline.group(1)
         addr = int(memline.group(1),16)
         if nextaddr<0:
             nextaddr=addr;
         while addr>nextaddr: #check for unitialized addresses
             print "00000000" #insert zero word as placeholder
-            nextaddr += 4            
+            nextaddr += 4        
         words = memline.group(2).split()
         for word in words:
-            word_BE = "00000000" + word
-            byte3 = word[-2:]
-            byte2 = word[-4:-2]
-            byte1 = word[-6:-4]
-            byte0 = word[-8:-6]
+            word_BE = word + "00000000"
+            byte3 = word_BE[6:8]
+            byte2 = word_BE[4:6]
+            byte1 = word_BE[2:4]
+            byte0 = word_BE[:2]
             memline_LE = byte3 + byte2 + byte1 + byte0
             nextaddr += 4
             print memline_LE

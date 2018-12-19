@@ -18,7 +18,6 @@ SECTIONS
   }
   . = 0x10000000;
   .data : { *(.sdata* .rodata* .data* .bss) }  
-  .MIPS.abiflags : { *(.MIPS.abiflags) }
   . = 0x80000000;
   .boot :
   {

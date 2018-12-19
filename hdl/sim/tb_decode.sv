@@ -1,61 +1,21 @@
-`include "../uart_defines.vh"
+`include "risc-v.svh"
+`include "jpu.svh"
 
-// Top testbench module for the JPU processor
-module tb_jpu_uart;
+import jpu::*
+  
+module tb_decode;
            
-   logic        clk, rst;
-   logic       uart_rxd_out, uart_txd_in;
-
-   logic [`UART_DATA_WIDTH-1:0] uart_rx_data, uart_tx_data;	// From uart_recv of uart_rx.v
-   logic			uart_rx_err;		// From uart_recv of uart_rx.v
-   logic			uart_rx_valid;		// From uart_recv of uart_rx.v
-   logic			uart_tx_ready;		// From uart_send of uart_tx.v
-   logic			uart_tx_valid;		// From uart_send of uart_tx.v
-   logic [`WORD_SIZE-1:0] uart_divide;		// From uart_send of uart_tx.v
-
-   logic 		  halted;
-   logic [7:0]		  status;
-   logic [3:0]		  user_btn;
-   logic [7:0] [31:0] 	  ila_probe;
-
-   assign halted=status[1];
-    		  
-   jpu_impl jpu(// Outputs
-		.status_led		(status),
-		.uart_rxd_out		(uart_rxd_out),
-		.ila_probe              (ila_probe),
-		// Inputs
-		.clk			(clk),
-		.rst			(rst),
-		.user_btn		(user_btn),
-		.user_sw		('0),
-		.uart_txd_in		(uart_txd_in));
+   logic [31:0]      inst;
+   jpu::dcd_s dcd;
+   
+   decode decoder(/*AUTOINST*/
+		  // Outputs
+		  .dcd			(dcd),
+		  // Inputs
+		  .inst			(inst[31:0]));
 
    
-   assign uart_divide = `UART_DIVIDE_OVERRIDE_SIM;
    
-   uart_tx tb_uart_tx( // Outputs
-		     .uart_tx_ready	(uart_tx_ready),
-		     .txd		(uart_txd_in),
-		     // Inputs
-		     .clk		(clk),
-		     .rst		(rst),
-		     .uart_divide	(uart_divide[`WORD_SIZE-1:0]),
-		     .uart_tx_data	(uart_tx_data[`UART_DATA_WIDTH-1:0]),
-		     .uart_tx_valid	(uart_tx_valid));
-   
-   uart_rx tb_uart_rx( // Outputs
-		     .uart_rx_data	(uart_rx_data[`UART_DATA_WIDTH-1:0]),
-		     .uart_rx_valid	(uart_rx_valid),
-		     .uart_rx_err	(uart_rx_err),
-		     // Inputs
-		     .clk		(clk),
-		     .rst		(rst),
-		     .rxd		(uart_rxd_out),
-		     .uart_divide	(uart_divide[`WORD_SIZE-1:0]));
-
-
-   string 		  tx_string = "abcdefg";
    initial
      begin
 	rst = 1;
@@ -158,4 +118,5 @@ endmodule
 
 // Local Variables:
 // verilog-typedef-regexp: "_[sS]$" 
+// verilog-library-directories:("..")
 // End:

@@ -1,7 +1,12 @@
-# jpu - 32bit mips ISA CPU
+# jpu - 32bit RISC-V ISA CPU
 
-This is a 32 bit mips ISA CPU. Some of the code is borrowed from the CMU ece447 labs found here: http://www.ece.cmu.edu/~ece447/s15/doku.php, although I plan to eventually replace all borrowed code with my own.  The CMU ece447 course lectures and lab files are all online and are a really great resource for learning about computer architecture.
+This is a 32 bit CPU with a risc-v ISA (rv32i).
 
 The CPU is written in Verilog and runs on an Xilinx Artix 7 (I'm using the Digilent Arty 7 board). But it should be straightforward to get it to run on any small FPGA.  The Xilinx Vivado project is included, and runs on the (free) Xilinx web-pack license.
 
-Compiling for the JPU requires a cross-toolchain to generate mips machine code. This can be set up rather painlessly using crosstool-ng (http://crosstool-ng.github.io/). Once you have installed crosstool-ng on your system, 'make crosstool' will make and install a mips toolchain, which can be invoked e.g. as 'mips-gcc'. The default toolchain install location is $HOME/x-tools/, but this along with a number of other options can be configured by running 'ct-ng menuconfig' in the crosstool/ directory.  See http://crosstool-ng.github.io/docs/configuration/ for more details.
+The risc-v toolchain is available here
+
+https://riscv.org/software-tools/risc-v-gnu-compiler-toolchain/
+
+and should be configured with the following options
+$$ ./configure --prefix=/opt/riscv 

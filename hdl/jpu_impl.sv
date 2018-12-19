@@ -20,7 +20,7 @@ module jpu_impl(/*AUTOARG*/
    output logic [7:0] [31:0]ila_probe;
    input 	uart_txd_in;
       
-   logic        halted, ram_rst, rst_b;
+   logic        halted, ram_rst;
    logic [7:0] 	interrupts;
    logic 	uart_rx_int, uart_tx_int;
 
@@ -53,7 +53,6 @@ module jpu_impl(/*AUTOARG*/
    bus::s2m_s [numTextSlaves-1:0] bus_textslave_out;
    
    assign ram_rst = rst;
-   assign rst_b = ~rst;
 
    assign status_led[0] = !rst;
    assign status_led[1] = halted;
@@ -75,14 +74,13 @@ module jpu_impl(/*AUTOARG*/
       ila_probe[7] <= ila_uart[1];
    end // always @ (posedge clk)
    
-   // The MIPS core
-   jpu_core core(// Outputs
+   core jpu_core(// Outputs
 		 .bus_master_inst_out	(bus_mastertext_out),
 		 .bus_master_data_out	(bus_masterdata_out),
 		 .halted		(halted),
 		 // Inputs
 		 .clk			(clk),
-		 .rst_b			(rst_b),
+		 .rst			(rst),
 		 .bus_master_inst_in	(bus_mastertext_in),
 		 .bus_master_data_in	(bus_masterdata_in),
 		 .interrupts            (interrupts),

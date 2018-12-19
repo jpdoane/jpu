@@ -32,7 +32,7 @@
 
 
 //special addresses
-`define BOOTSTRAP_START `KTEXT_SEG_BASE
+`define BOOTSTRAP_ADDR `KTEXT_SEG_BASE
 `define EXCEPT_HANDLER 'h80000180
 
 
