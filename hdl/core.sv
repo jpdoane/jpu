@@ -1,35 +1,33 @@
 `include "mmap_defines.vh"
-`include "bus.vh"
-`include "jpu.svh"
+`include "decode_if.sv"
+`include "bus_if.sv"
 
-import bus::*;
-import jpu::*;
-
-module core(/*AUTOARG*/
+module core(
+   bus_if.master bus_inst,
+   bus_if.master bus_data,
+   
+   /*AUTOARG*/
    // Outputs
-   halted, bus_master_inst_out, bus_master_data_out, ila_probe,
+   halted, ila_probe,
    // Inputs
-   clk, rst, interrupts, bus_master_inst_in, bus_master_data_in
+   clk, rst, interrupts
    );
    
    // Core Interface
    input         clk, rst;
    output        halted;
    input 	 [7:0] interrupts;
-   input 	 bus::s2m_s bus_master_inst_in, bus_master_data_in;
-   output 	 bus::m2s_s bus_master_inst_out, bus_master_data_out;
    output [31:0] ila_probe[5:0];
 
+
+   
    // instruction
    logic [31:0] inst;
 
    // pc and flow signals
-   logic 	rst, en, boot, fetch, jump;
+   logic 	en, boot, fetch, jump;
    logic [31:0] pc, nextpc, pcplus4;
    //logic 	stall, stalled; 
-
-   // decode signals
-   jpu::dcd_s dcd;
 
    // register signals
    logic [31:0] rs1_data, rs2_data, rd_data, wb_data; 	 
@@ -89,11 +87,9 @@ module core(/*AUTOARG*/
 		   boot ? `BOOTSTRAP_ADDR :       
 		   jump ? {alu_out[31:1], 1'b0} : // LSB of jump/branch calls is set to 0
 		   pcplus4;                       
-   
-   decode Decoder(// Outputs
-		  .dcd			(dcd),
-		  // Inputs
-		  .inst			(inst));
+
+   decode_if dcd(.inst(inst));
+   decode Decoder(.dif(dcd));
 
    // store reg data for write back rd on following cycle.  This allows cycle for memory read  
    always @(posedge clk) begin      
@@ -155,40 +151,33 @@ module core(/*AUTOARG*/
    //
    assign mem_en = en & (dcd.ld | dcd.st);
 
-   bus_master bus_inst_master(// Outputs
+   bus_master bus_inst_master( .bus(bus_inst),
+			      // Outputs
 			      .data_o		(inst),
 			      .valid_o		(bus_inst_valid),
 			      .stall_o		(bus_inst_stall),
 			      .err_o		(bus_inst_err),
-			      .bus_o		(bus_master_inst_out),
 			      // Inputs
-			      .clk		(clk),
-			      .rst		(rst),
 			      .en_i		(fetch),
 			      .we_i		('0),
 			      .data_i		('0),
 			      .addr_i		(nextpc[31:2]),
-			      .byte_mask_i	('1),
-			      .bus_i		(bus_master_inst_in));
+			      .byte_mask_i	('1));
 
-
-   bus_master bus_data_master( // Outputs
+   bus_master bus_data_master( .bus(bus_data),
+			      // Outputs
 			       .data_o		(mem_read_word),
 			       .valid_o		(bus_data_valid),
 			       .stall_o		(bus_data_stall),
 			       .err_o		(bus_data_err),
-			       .bus_o		(bus_master_data_out),
 			       // Inputs
-			       .clk		(clk),
-			       .rst		(rst),
 			       .en_i		(mem_en),
 			       .we_i		(dcd.st),
 			       .data_i		(mem_write_word),
 			       .addr_i		(alu_out[31:2]),
-			       .byte_mask_i	(mem_write_mask),
-			       .bus_i		(bus_master_data_in));
-   
+			       .byte_mask_i	(mem_write_mask));
 
+   
    //write align operates on same clock as decode, use dcd/alu signals
    mem_write_align MEM_WRITE_ALIGN(// Inputs
 				   .data(rs2_data), //data to write

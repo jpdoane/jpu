@@ -1,8 +1,5 @@
-`include "bus.vh"
+`include "bus_if.sv"
 `include "mmap_defines.vh"
-
-import bus::*;
-
 
 // Top module for the MIPS processor core
 module jpu_impl(/*AUTOARG*/
@@ -20,7 +17,7 @@ module jpu_impl(/*AUTOARG*/
    output logic [7:0] [31:0]ila_probe;
    input 	uart_txd_in;
       
-   logic        halted, ram_rst;
+   logic        halted;
    logic [7:0] 	interrupts;
    logic 	uart_rx_int, uart_tx_int;
 
@@ -28,32 +25,7 @@ module jpu_impl(/*AUTOARG*/
    logic [31:0]  ila_uart[1:0];   
 
    logic 	 btn_re, btn_fe, sw_re, sw_fe; //rising and falling edge signals
-   
-   localparam numTextMasters = 1;
-   localparam numTextSlaves = 2;
-   localparam bus::slave_info_s [numTextSlaves-1:0]    //note that order for initialization is N-1 -> 0
-     textSlaveInfo = '{bus::slave_info(`KTEXT_SEG_BASE, `KTEXT_SEG_WORDS),
-		       bus::slave_info(`TEXT_SEG_BASE, `TEXT_SEG_WORDS)};
-
-   localparam numDataMasters = 1;
-   localparam numDataSlaves = 5;
-   localparam bus::slave_info_s [numDataSlaves-1:0]     //note that order for initialization is N-1 -> 0
-     dataSlaveInfo = '{bus::slave_info(`UART_SEG_BASE, `UART_SEG_WORDS),
-		   bus::slave_info(`KDATA_SEG_BASE, `KDATA_SEG_WORDS),
-		   bus::slave_info(`STACK_SEG_BASE, `STACK_SEG_WORDS),
-		   bus::slave_info(`HEAP_SEG_BASE, `HEAP_SEG_WORDS),
-		   bus::slave_info(`DATA_SEG_BASE, `DATA_SEG_WORDS)};
-   
-   bus::s2m_s bus_mastertext_in, bus_masterdata_in;
-   bus::m2s_s bus_mastertext_out, bus_masterdata_out;
-
-   bus::m2s_s [numDataSlaves-1:0] bus_dataslave_in;
-   bus::s2m_s [numDataSlaves-1:0] bus_dataslave_out;
-   bus::m2s_s [numTextSlaves-1:0] bus_textslave_in;
-   bus::s2m_s [numTextSlaves-1:0] bus_textslave_out;
-   
-   assign ram_rst = rst;
-
+         
    assign status_led[0] = !rst;
    assign status_led[1] = halted;
    assign status_led[7:2] = '0;
@@ -74,109 +46,56 @@ module jpu_impl(/*AUTOARG*/
       ila_probe[7] <= ila_uart[1];
    end // always @ (posedge clk)
    
-   core jpu_core(// Outputs
-		 .bus_master_inst_out	(bus_mastertext_out),
-		 .bus_master_data_out	(bus_masterdata_out),
+   // instantiate bus interfaces and devices
+   bus_master_if bus_master_text();
+   bus_master_if bus_master_data();
+
+   bus_slave_if #(`TEXT_SEG_BASE, `TEXT_SEG_WIDTH) bus_text();
+   bus_slave_if #(`KTEXT_SEG_BASE, `KTEXT_SEG_WIDTH) bus_ktext();
+   bus_slave_if #(`DATA_SEG_BASE, `DATA_SEG_WIDTH) bus_data();
+   bus_slave_if #(`HEAP_SEG_BASE, `HEAP_SEG_WIDTH) bus_heap();
+   bus_slave_if #(`STACK_SEG_BASE, `STACK_SEG_WIDTH) bus_stack();
+   bus_slave_if #(`KDATA_SEG_BASE, `KDATA_SEG_WIDTH) bus_kdata();
+//   bus_slave_if #(`UART_SEG_BASE, `UART_SEG_WIDTH) bus_uart();
+
+   ram_bus  #(`TEXT_INIT_FILE) ram_text( .bus(bus_text) );
+   ram_bus  #(`KTEXT_INIT_FILE) ram_ktext( .bus(bus_ktext) );
+   ram_bus  #(`DATA_INIT_FILE) ram_data( .bus(bus_data) );
+   ram_bus  #(`HEAP_INIT_FILE) ram_heap( .bus(bus_heap) );
+   ram_bus  #(`STACK_INIT_FILE) ram_stack( .bus(bus_stack) );
+   ram_bus  #(`KDATA_INIT_FILE) ram_kdata( .bus(bus_kdata) );
+   
+   // uart_bus uart(.bus           (bus_uart), 
+   // 		 .uart_rxd_out	(uart_rxd_out),
+   // 		 .uart_txd_in	(uart_txd_in),
+   // 		 .uart_rx_int   (uart_rx_int),
+   // 		 .uart_tx_int   (uart_tx_int),
+   // 		 .ila_probe     (ila_uart));
+
+
+   bus_intercon #(.numSlaves(2)) instbus(.bus_master(bus_master_text),
+					 .bus_slaves('{bus_text, bus_ktext}),
+					 .clk(clk),
+					 .rst(rst));
+   
+   bus_intercon #(.numSlaves(5)) databus(.bus_master(bus_master_data),
+					 .bus_slaves('{bus_data, bus_heap, bus_stack, bus_kdata}),
+					 .clk(clk),
+					 .rst(rst));
+   
+   // cpu core
+   core jpu_core( .bus_inst(bus_master_text),
+		  .bus_data(bus_master_data),
+		 // Outputs
 		 .halted		(halted),
 		 // Inputs
 		 .clk			(clk),
 		 .rst			(rst),
-		 .bus_master_inst_in	(bus_mastertext_in),
-		 .bus_master_data_in	(bus_masterdata_in),
 		 .interrupts            (interrupts),
 		 .ila_probe             (ila_core));
-   
-   // instantiate devices on the bus
-   ram_bus  #(.initfile(`TEXT_INIT_FILE), .slaveInfo(textSlaveInfo[0]))
-   ram_text( // Outputs
-	     .bus_o		(bus_textslave_out[0]),
-	     // Inputs
-	     .clk		(clk),
-	     .rst		(rst),
-	     .ram_rst		(ram_rst),
-	     .bus_i		(bus_textslave_in[0]));
 
-   ram_bus  #(.initfile(`KTEXT_INIT_FILE), .slaveInfo(textSlaveInfo[1]))
-   ram_ktext( // Outputs
-	     .bus_o		(bus_textslave_out[1]),
-	     // Inputs
-	     .clk		(clk),
-	     .rst		(rst),
-	     .ram_rst		(ram_rst),
-	     .bus_i		(bus_textslave_in[1]));
 
-   
-   ram_bus  #(.initfile(`DATA_INIT_FILE), .slaveInfo(dataSlaveInfo[0]))
-   ram_data (// Outputs
-	     .bus_o		(bus_dataslave_out[0]),
-	     // Inputs
-	     .clk		(clk),
-	     .rst		(rst),
-	     .ram_rst		(ram_rst),
-	     .bus_i		(bus_dataslave_in[0]));
-
-   ram_bus  #(.initfile(`HEAP_INIT_FILE), .slaveInfo(dataSlaveInfo[1]))
-   ram_heap (// Outputs
-	     .bus_o		(bus_dataslave_out[1]),
-	     // Inputs
-	     .clk		(clk),
-	     .rst		(rst),
-	     .ram_rst		(ram_rst),
-	     .bus_i		(bus_dataslave_in[1]));
-
-   ram_bus  #(.initfile(`STACK_INIT_FILE), .slaveInfo(dataSlaveInfo[2]))
-   ram_stack (// Outputs
-	     .bus_o		(bus_dataslave_out[2]),
-	     // Inputs
-	     .clk		(clk),
-	     .rst		(rst),
-	     .ram_rst		(ram_rst),
-	     .bus_i		(bus_dataslave_in[2]));
-
-   ram_bus  #(.initfile(`KDATA_INIT_FILE), .slaveInfo(dataSlaveInfo[3]))
-   ram_kdata (// Outputs
-	     .bus_o		(bus_dataslave_out[3]),
-	     // Inputs
-	     .clk		(clk),
-	     .rst		(rst),
-	     .ram_rst		(ram_rst),
-	     .bus_i		(bus_dataslave_in[3]));
-   
-   uart_bus #(.slaveInfo(dataSlaveInfo[4]))
-     uart(// Outputs
-	.uart_rxd_out		(uart_rxd_out),
-	.bus_o			(bus_dataslave_out[4]),
-	// Inputs
-	.clk			(clk),
-	.rst			(rst),
-	.uart_txd_in		(uart_txd_in),
-	.bus_i			(bus_dataslave_in[4]),
-	.uart_rx_int               (uart_rx_int),
-	.uart_tx_int               (uart_tx_int),
-        .ila_probe              (ila_uart));
-
-   // set up data bus      
-   bus_intercon #(.numMasters(numDataMasters), .numSlaves(numDataSlaves), .slaveInfo(dataSlaveInfo))
-   databus( // Outputs
-	    .bus_master_in_o	(bus_masterdata_in),
-	    .bus_slave_in_o	(bus_dataslave_in),
-	    // Inputs
-	    .clk		(clk),
-	    .rst		(rst),
-	    .bus_master_out_i	(bus_masterdata_out),
-	    .bus_slave_out_i	(bus_dataslave_out));
-
-   // set up instruction bus
-   bus_intercon #(.numMasters(numTextMasters), .numSlaves(numTextSlaves), .slaveInfo(textSlaveInfo))
-   instbus( // Outputs
-	    .bus_master_in_o	(bus_mastertext_in),
-	    .bus_slave_in_o	(bus_textslave_in),
-	    // Inputs
-	    .clk		(clk),
-	    .rst		(rst),
-	    .bus_master_out_i	(bus_mastertext_out),
-	    .bus_slave_out_i	(bus_textslave_out));
-
+   // physical buttens and switches
    btn_edge #(4) arty_btns( // Outputs
 		      .btn_re		(btn_re),
 		      .btn_fe		(btn_fe),

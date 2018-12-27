@@ -1,48 +1,51 @@
-`include "bus.vh"
+`include "bus_if.sv"
 
-import bus::*;
-
-module bus_master(/*AUTOARG*/
+module bus_master(bus,
+   /*AUTOARG*/
    // Outputs
-   data_o, valid_o, stall_o, err_o, bus_o,
+   data_o, valid_o, stall_o, err_o,
    // Inputs
-   clk, rst, en_i, we_i, data_i, addr_i, byte_mask_i, bus_i
+   en_i, we_i, data_i, addr_i, byte_mask_i
    );
    
-   input logic clk, rst;
+   bus_master_if bus;
+   
    input logic en_i, we_i;
    input logic [31:0] data_i;
    input logic [29:0] addr_i;
    input logic [3:0]  byte_mask_i;   
    output logic [31:0] data_o;
    output logic        valid_o, stall_o, err_o;
-   input 	       bus::s2m_s bus_i;
-   output 	       bus::m2s_s bus_o;
       
    logic 	       active_req, active_read;
-   
+
+   logic clk, rst;
+
+   assign clk = bus.clk;
+   assign rst = bus.rst;
+      
    always @(posedge clk) begin
       if(rst) begin
 	 active_req <= 0;
 	 active_read <= 0;
       end
       else begin
-	 active_req <= en_i | (active_req & bus_i.stall);
-	 active_read <= (en_i & ~we_i) | (active_read & bus_i.stall);
+	 active_req <= en_i | (active_req & bus.stall);
+	 active_read <= (en_i & ~we_i) | (active_read & bus.stall);
       end
    end
      
-   assign bus_o.cyc = en_i | active_req;
-   assign bus_o.stb = en_i;
-   assign bus_o.we = en_i & we_i;
-   assign bus_o.sel = byte_mask_i;
-   assign bus_o.data = data_i;
-   assign bus_o.addr = addr_i;
+   assign bus.cyc = en_i | active_req;
+   assign bus.stb = en_i;
+   assign bus.we = en_i & we_i;
+   assign bus.sel = byte_mask_i;
+   assign bus.data_m2s = data_i;
+   assign bus.addr = addr_i;
          
-   assign data_o = bus_i.data;
-   assign valid_o = active_read && bus_i.ack && ~bus_i.err;
-   assign stall_o = bus_i.stall;
-   assign err_o = bus_i.err || (active_req & ~(bus_i.stall | bus_i.ack));
+   assign data_o = bus.data_s2m;
+   assign valid_o = active_read && bus.ack && ~bus.err;
+   assign stall_o = bus.stall;
+   assign err_o = bus.err || (active_req & ~(bus.stall | bus.ack));
 
 endmodule // bus_master
 

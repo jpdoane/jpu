@@ -11,7 +11,6 @@ package jpu;
       logic 	  alu_pc, alu_imm, alu_we;
       logic 	  j, br, ld, st;
       logic [31:0] imm;
-      logic [1:0]  mem_w;	    	  
    } dcd_s;
 
    typedef struct packed {      
