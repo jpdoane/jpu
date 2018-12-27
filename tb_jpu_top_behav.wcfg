@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_jpu_top_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="tb_jpu_top" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0fs"></ZoomStartTime>
+      <ZoomEndTime time="141000001fs"></ZoomEndTime>
+      <Cursor1Time time="64200000fs"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="188"></NameColumnWidth>
+      <ValueColumnWidth column_width="66"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="1" />
+   <wvobject type="group" fp_name="group264">
+      <obj_property name="label">core</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject type="logic" fp_name="/tb_jpu_top/jpu/jpu_core/clk">
+         <obj_property name="ElementShortName">clk</obj_property>
+         <obj_property name="ObjectShortName">clk</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_jpu_top/jpu/jpu_core/rst">
+         <obj_property name="ElementShortName">rst</obj_property>
+         <obj_property name="ObjectShortName">rst</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_jpu_top/jpu/jpu_core/halted">
+         <obj_property name="ElementShortName">halted</obj_property>
+         <obj_property name="ObjectShortName">halted</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_jpu_top/jpu/jpu_core/interrupts">
+         <obj_property name="ElementShortName">interrupts[7:0]</obj_property>
+         <obj_property name="ObjectShortName">interrupts[7:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_jpu_top/jpu/jpu_core/ila_probe">
+         <obj_property name="ElementShortName">ila_probe[5:0][31:0]</obj_property>
+         <obj_property name="ObjectShortName">ila_probe[5:0][31:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_jpu_top/jpu/jpu_core/inst">
+         <obj_property name="ElementShortName">inst[31:0]</obj_property>
+         <obj_property name="ObjectShortName">inst[31:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_jpu_top/jpu/jpu_core/en">
+         <obj_property name="ElementShortName">en</obj_property>
+         <obj_property name="ObjectShortName">en</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_jpu_top/jpu/jpu_core/boot">
+         <obj_property name="ElementShortName">boot</obj_property>
+         <obj_property name="ObjectShortName">boot</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_jpu_top/jpu/jpu_core/fetch">
+         <obj_property name="ElementShortName">fetch</obj_property>
+         <obj_property name="ObjectShortName">fetch</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_jpu_top/jpu/jpu_core/jump">
+         <obj_property name="ElementShortName">jump</obj_property>
+         <obj_property name="ObjectShortName">jump</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_jpu_top/jpu/jpu_core/pc">
+         <obj_property name="ElementShortName">pc[31:0]</obj_property>
+         <obj_property name="ObjectShortName">pc[31:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_jpu_top/jpu/jpu_core/nextpc">
+         <obj_property name="ElementShortName">nextpc[31:0]</obj_property>
+         <obj_property name="ObjectShortName">nextpc[31:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_jpu_top/jpu/jpu_core/pcplus4">
+         <obj_property name="ElementShortName">pcplus4[31:0]</obj_property>
+         <obj_property name="ObjectShortName">pcplus4[31:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_jpu_top/jpu/jpu_core/rs1_data">
+         <obj_property name="ElementShortName">rs1_data[31:0]</obj_property>
+         <obj_property name="ObjectShortName">rs1_data[31:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_jpu_top/jpu/jpu_core/rs2_data">
+         <obj_property name="ElementShortName">rs2_data[31:0]</obj_property>
+         <obj_property name="ObjectShortName">rs2_data[31:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_jpu_top/jpu/jpu_core/rd_data">
+         <obj_property name="ElementShortName">rd_data[31:0]</obj_property>
+         <obj_property name="ObjectShortName">rd_data[31:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_jpu_top/jpu/jpu_core/wb_data">
+         <obj_property name="ElementShortName">wb_data[31:0]</obj_property>
+         <obj_property name="ObjectShortName">wb_data[31:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_jpu_top/jpu/jpu_core/alu_in1">
+         <obj_property name="ElementShortName">alu_in1[31:0]</obj_property>
+         <obj_property name="ObjectShortName">alu_in1[31:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_jpu_top/jpu/jpu_core/alu_in2">
+         <obj_property name="ElementShortName">alu_in2[31:0]</obj_property>
+         <obj_property name="ObjectShortName">alu_in2[31:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_jpu_top/jpu/jpu_core/alu_out">
+         <obj_property name="ElementShortName">alu_out[31:0]</obj_property>
+         <obj_property name="ObjectShortName">alu_out[31:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_jpu_top/jpu/jpu_core/rd">
+         <obj_property name="ElementShortName">rd[4:0]</obj_property>
+         <obj_property name="ObjectShortName">rd[4:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_jpu_top/jpu/jpu_core/ld">
+         <obj_property name="ElementShortName">ld</obj_property>
+         <obj_property name="ObjectShortName">ld</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_jpu_top/jpu/jpu_core/rd_we">
+         <obj_property name="ElementShortName">rd_we</obj_property>
+         <obj_property name="ObjectShortName">rd_we</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_jpu_top/jpu/jpu_core/cmp_result">
+         <obj_property name="ElementShortName">cmp_result</obj_property>
+         <obj_property name="ObjectShortName">cmp_result</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_jpu_top/jpu/jpu_core/bus_inst_valid">
+         <obj_property name="ElementShortName">bus_inst_valid</obj_property>
+         <obj_property name="ObjectShortName">bus_inst_valid</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_jpu_top/jpu/jpu_core/bus_inst_stall">
+         <obj_property name="ElementShortName">bus_inst_stall</obj_property>
+         <obj_property name="ObjectShortName">bus_inst_stall</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_jpu_top/jpu/jpu_core/bus_inst_err">
+         <obj_property name="ElementShortName">bus_inst_err</obj_property>
+         <obj_property name="ObjectShortName">bus_inst_err</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_jpu_top/jpu/jpu_core/bus_data_valid">
+         <obj_property name="ElementShortName">bus_data_valid</obj_property>
+         <obj_property name="ObjectShortName">bus_data_valid</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_jpu_top/jpu/jpu_core/bus_data_stall">
+         <obj_property name="ElementShortName">bus_data_stall</obj_property>
+         <obj_property name="ObjectShortName">bus_data_stall</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_jpu_top/jpu/jpu_core/bus_data_err">
+         <obj_property name="ElementShortName">bus_data_err</obj_property>
+         <obj_property name="ObjectShortName">bus_data_err</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_jpu_top/jpu/jpu_core/mem_en">
+         <obj_property name="ElementShortName">mem_en</obj_property>
+         <obj_property name="ObjectShortName">mem_en</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_jpu_top/jpu/jpu_core/mem_read_valid">
+         <obj_property name="ElementShortName">mem_read_valid</obj_property>
+         <obj_property name="ObjectShortName">mem_read_valid</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_jpu_top/jpu/jpu_core/mem_write_mask">
+         <obj_property name="ElementShortName">mem_write_mask[3:0]</obj_property>
+         <obj_property name="ObjectShortName">mem_write_mask[3:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_jpu_top/jpu/jpu_core/mem_read_word">
+         <obj_property name="ElementShortName">mem_read_word[31:0]</obj_property>
+         <obj_property name="ObjectShortName">mem_read_word[31:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_jpu_top/jpu/jpu_core/mem_write_word">
+         <obj_property name="ElementShortName">mem_write_word[31:0]</obj_property>
+         <obj_property name="ObjectShortName">mem_write_word[31:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_jpu_top/jpu/jpu_core/mem_data_rd">
+         <obj_property name="ElementShortName">mem_data_rd[31:0]</obj_property>
+         <obj_property name="ObjectShortName">mem_data_rd[31:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_jpu_top/jpu/jpu_core/mem_format">
+         <obj_property name="ElementShortName">mem_format[2:0]</obj_property>
+         <obj_property name="ObjectShortName">mem_format[2:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_jpu_top/jpu/jpu_core/mem_addr_lsb">
+         <obj_property name="ElementShortName">mem_addr_lsb[1:0]</obj_property>
+         <obj_property name="ObjectShortName">mem_addr_lsb[1:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_jpu_top/jpu/jpu_core/write_align_err">
+         <obj_property name="ElementShortName">write_align_err</obj_property>
+         <obj_property name="ObjectShortName">write_align_err</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_jpu_top/jpu/jpu_core/read_align_err">
+         <obj_property name="ElementShortName">read_align_err</obj_property>
+         <obj_property name="ObjectShortName">read_align_err</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_jpu_top/jpu/jpu_core/priv_level">
+         <obj_property name="ElementShortName">priv_level[1:0]</obj_property>
+         <obj_property name="ObjectShortName">priv_level[1:0]</obj_property>
+      </wvobject>
+   </wvobject>
+</wave_config>

@@ -12,7 +12,7 @@ module bus_master(bus,
    
    input logic en_i, we_i;
    input logic [31:0] data_i;
-   input logic [29:0] addr_i;
+   input logic [31:0] addr_i;
    input logic [3:0]  byte_mask_i;   
    output logic [31:0] data_o;
    output logic        valid_o, stall_o, err_o;

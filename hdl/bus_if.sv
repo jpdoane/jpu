@@ -3,7 +3,7 @@
 `define BUSIF_SV
 
 `define BUS_DATAWIDTH 32
-`define BUS_ADDRWIDTH `BUS_DATAWIDTH-2
+`define BUS_ADDRWIDTH 32
 
 `define BUS_BYTEWIDTH 8
 `define BUS_SELWIDTH `BUS_DATAWIDTH/`BUS_BYTEWIDTH
@@ -48,10 +48,14 @@ interface bus_slave_if;
 
    // slave address translation
    logic [addrWidth-1:0]  localAddr;
+   logic [addrWidth-3:0]  localWordAddr;
    logic 			      localSelect;
+   logic 			      wordAligned;
+   
    assign localSelect = cyc && (addr[`BUS_ADDRWIDTH-1:addrWidth] == baseAddr[`BUS_ADDRWIDTH-1:addrWidth]);
    assign localAddr = addr[addrWidth-1:0];
-   
+   assign localWordAddr = addr[addrWidth-1:2];
+   assign wordAligned = (localAddr[1:0] == 2'b00);   
 endinterface
 
 			       

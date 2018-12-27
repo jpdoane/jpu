@@ -2,18 +2,18 @@
 
 module bus_tb;
            
-   localparam [29:0] ram1_addr = 30'h12340000;
-   localparam [29:0] ram2_addr = 30'h1bcd0000;
+   localparam [29:0] ram1_addr = 32'h12340000;
+   localparam [29:0] ram2_addr = 32'habcd0000;
 
-   localparam ram1_width = 4;
-   localparam ram2_width = 3;
+   localparam ram1_width = 5;
+   localparam ram2_width = 6;
    
    logic clk, rst;
 
    //master signals
    logic en, we;
    logic [31:0] data_i;
-   logic [29:0] addr;
+   logic [31:0] addr;
    logic [3:0]  byte_mask;   
    logic [31:0] data_o;
    logic        valid, stall, err;
@@ -34,7 +34,7 @@ module bus_tb;
 		     .en_i		(en),
 		     .we_i		(we),
 		     .data_i		(data_i[31:0]),
-		     .addr_i		(addr[29:0]),
+		     .addr_i		(addr[31:0]),
 		     .byte_mask_i	(byte_mask[3:0]));
       
    bus_slave_if #(ram1_addr, ram1_width) bus_ram1();
@@ -72,19 +72,32 @@ module bus_tb;
 
 	@(posedge clk);
 	//write to ram1[1]
-	addr <= ram1_addr+1;
+	addr <= ram1_addr+4;
 	data_i <= 32'h12345678;
+
+	@(posedge clk);
+	//write to msb of ram1[1]
+	byte_mask = 4'b1000;
+	addr <= ram1_addr+4;
+	data_i <= 32'haa000000;
+	@(posedge clk);
+
+	//write to lsb of ram1[1]
+	byte_mask = 4'b0001;
+	addr <= ram1_addr+4;
+	data_i <= 32'h000000bb;
 
 	@(posedge clk);
 	//#1
 	//write to ram2[0]
+	byte_mask = 4'b1111;
 	addr <= ram2_addr;
 	data_i <= 32'h87654321;
 
 	@(posedge clk);
 	//#1
 	//write to ram2[1]
-	addr <= ram2_addr+1;
+	addr <= ram2_addr+4;
 	data_i <= 32'habcd1234;
 	
 	@(posedge clk);
@@ -97,7 +110,7 @@ module bus_tb;
 	@(posedge clk);
 	//#1
 	//read from ram1[1]
-	addr <= ram1_addr+1;
+	addr <= ram1_addr+4;
 	
 	@(negedge clk);
 	assert(valid && data_o == 32'hdeadbeef); //check ram1[0] data
@@ -108,11 +121,11 @@ module bus_tb;
 	addr <= ram2_addr;
 
 	@(negedge clk);
-	assert(valid && data_o == 32'h12345678); //check ram1[1] data
+	assert(valid && data_o == 32'haa3456bb); //check ram1[1] data
 	
 	@(posedge clk);
-	//read from ram2[0]
-	addr <= ram2_addr+1;
+	//read from ram2[1]
+	addr <= ram2_addr+4;
 
 	@(negedge clk);
 	assert(valid && data_o == 32'h87654321); //check ram2[0] data
@@ -121,6 +134,24 @@ module bus_tb;
 
 	@(negedge clk);
 	assert(valid && data_o == 32'habcd1234); //check ram2[1] data
+
+	@(posedge clk);
+	//try address not word aligned
+	addr <= ram1_addr+1;
+
+	@(posedge clk);
+	@(negedge clk);
+	assert(~valid && err); //confirm addr err
+
+	@(posedge clk);
+	//try address out of range of slaves
+	addr <= '0;
+
+	@(posedge clk);
+	@(negedge clk);
+	assert(~valid && err); //confirm addr err
+
+
 	
 	$finish;
 	  

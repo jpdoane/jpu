@@ -16,7 +16,7 @@ module jpu_impl(/*AUTOARG*/
    output logic      uart_rxd_out;
    output logic [7:0] [31:0]ila_probe;
    input 	uart_txd_in;
-      
+       
    logic        halted;
    logic [7:0] 	interrupts;
    logic 	uart_rx_int, uart_tx_int;
@@ -78,7 +78,7 @@ module jpu_impl(/*AUTOARG*/
 					 .clk(clk),
 					 .rst(rst));
    
-   bus_intercon #(.numSlaves(5)) databus(.bus_master(bus_master_data),
+   bus_intercon #(.numSlaves(4)) databus(.bus_master(bus_master_data),
 					 .bus_slaves('{bus_data, bus_heap, bus_stack, bus_kdata}),
 					 .clk(clk),
 					 .rst(rst));

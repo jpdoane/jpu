@@ -2,17 +2,18 @@
 `include "decode_if.sv"
 `include "bus_if.sv"
 
-module core(
-   bus_if.master bus_inst,
-   bus_if.master bus_data,
+module core(bus_inst, bus_data,
+	    /*AUTOARG*/
+	    // Outputs
+	    halted, ila_probe,
+	    // Inputs
+	    clk, rst, interrupts
+	    );
    
-   /*AUTOARG*/
-   // Outputs
-   halted, ila_probe,
-   // Inputs
-   clk, rst, interrupts
-   );
    
+   bus_master_if bus_inst, bus_data;
+   
+
    // Core Interface
    input         clk, rst;
    output        halted;
@@ -161,7 +162,7 @@ module core(
 			      .en_i		(fetch),
 			      .we_i		('0),
 			      .data_i		('0),
-			      .addr_i		(nextpc[31:2]),
+			      .addr_i		(nextpc),
 			      .byte_mask_i	('1));
 
    bus_master bus_data_master( .bus(bus_data),
